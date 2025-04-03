@@ -385,7 +385,7 @@ export const useDocumentStore = create<DocumentStore>()(
             // alba prod
             //"ws://annotator.core.texttechnologylab.org/uima"
             const webSocket = new WebSocket(
-              "ws://textannotator.texttechnologylab.org/uima"
+              "wss://textannotator.texttechnologylab.org/uima"
             )
             webSocket.onclose = (closeEvent) => {
               console.log(
