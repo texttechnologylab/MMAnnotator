@@ -12,6 +12,7 @@ import { WebSocketProvider } from "./components/wrappers/WebSocketProvider"
 import { UploadPage } from "./pages/admin/Upload"
 import LegalNotice from "./pages/LegalNotice"
 import { DemoRouteImages } from "./pages/projects/demo/DemoImage"
+import { getCorpusConfig } from "./lib/temp"
 
 export default function App() {
   return (
@@ -26,8 +27,21 @@ export default function App() {
           <Route path="/legal" element={<LegalNotice />} />
           <Route path="projects">
             <Route path="" element={<ProjectsPage />} />
-            <Route path="34926">
-              <Route path="Task" element={<DemoRouteImages />} />
+            <Route path="37269">
+              <Route
+                path="Task"
+                element={
+                  <DemoRouteImages
+                    options={{
+                      uce_hostname:
+                        window._env_?.UCE_URL ||
+                        "http://isengart.hucompute.org:18394",
+                      uce_corpus_id: 1, // images annotation enabled
+                      uce_corpus_config: getCorpusConfig("CORE-B04")
+                    }}
+                  />
+                }
+              />
               <Route path="" element={<Overview />} />
               <Route path="*" element={<Navigate to="" replace />} />
             </Route>

@@ -16,8 +16,13 @@ export const useProjectCas = (projectId: string) => {
     openTool,
     openProject
   } = useANNO()
-  const { getById, getProjectCasId, subscribeToWebSocket, clearListeners } =
-    useDocumentStore()
+  const {
+    getById,
+    // getAdditionalOptionsById,
+    getProjectCasId,
+    subscribeToWebSocket,
+    clearListeners
+  } = useDocumentStore()
   const { userName } = useUser()
 
   const [document, setDocument] = useState<CASDocument | null>(null)
@@ -53,7 +58,10 @@ export const useProjectCas = (projectId: string) => {
   const changeCasCallback = (_msg: any) => {
     const document = getById(getProjectCasId())
     if (!document) return
-    saveCASDocument(document)
+    // TODO should not be needed here?
+    // const options = getAdditionalOptionsById(casId)
+    const options = {}
+    saveCASDocument(document, options)
   }
 
   const submitChanges = (data: BasicFormValues) => {

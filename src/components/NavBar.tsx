@@ -30,9 +30,9 @@ export default function NavBar() {
     >
       <Container fluid>
         <Navbar.Brand href="/" style={{ float: "left" }}>
-          <span className={"text-muted"}>TTLab MM-Annotator</span>
+          <span className={"text-muted"}>TTLab TextAnnotator CORE</span>
         </Navbar.Brand>
-        <Navbar.Brand href={"/projects/" + projectId} style={{ float: "left", flex: "0.62" }}>
+        <Navbar.Brand style={{ float: "left", flex: "0.62" }}>
           <span style={{ marginLeft: "20px" }}>
             {raw?.project_data.success && raw?.project_data.result?.name}
           </span>

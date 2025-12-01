@@ -17,9 +17,15 @@ export const useCasSeg = (casId: string) => {
     openCASDocument,
     saveCASDocument,
     openView,
-    openToolSeg
+    openToolSeg,
+    sendRagMessage
   } = useANNO()
-  const { getById, subscribeToWebSocket, clearListeners } = useDocumentStore()
+  const {
+    getById,
+    getAdditionalOptionsById,
+    subscribeToWebSocket,
+    clearListeners
+  } = useDocumentStore()
   const { userName } = useUser()
 
   const [document, setDocument] = useState<CASDocument | null>(null)
@@ -65,7 +71,8 @@ export const useCasSeg = (casId: string) => {
     if (msg.data.casId !== casId) return
     const document = getById(casId)
     if (!document) return
-    saveCASDocument(document)
+    const options = getAdditionalOptionsById(casId)
+    saveCASDocument(document, options)
   }
 
   const openToolSegCallback = (msg: any) => {
@@ -73,6 +80,32 @@ export const useCasSeg = (casId: string) => {
     const document = getById(casId)
     if (!document) return
     setDocument(document)
+  }
+
+  //TODO: This shouldn't be part of useCas imo
+  const ragMessage = (command: string, msg: Record<string, any>) => {
+    // console.log("ragMessage", command, msg)
+
+    const document = getById(casId)
+    // console.log("document", document)
+    if (!document) return
+
+    const options = getAdditionalOptionsById(casId)
+    // console.log("options", options)
+    if (!options) return
+
+    const view = document.getCurrentView()
+    // console.log("view", view)
+    if (!view) return
+
+    const data = {
+      command: command,
+      casId: casId,
+      view: view,
+      ...msg
+    }
+    // console.log("data", data)
+    sendRagMessage(data, options)
   }
 
   const submitChanges = (data: BasicFormValues) => {
@@ -116,6 +149,7 @@ export const useCasSeg = (casId: string) => {
     getDocument,
     submitChanges,
     subscribeToWebSocket,
-    loadingState
+    loadingState,
+    ragMessage
   }
 }

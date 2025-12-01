@@ -17,7 +17,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-
+    "typeRoots": ["./node_modules/@types", "./src/global.d.ts"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]

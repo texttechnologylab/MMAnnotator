@@ -272,9 +272,12 @@ export type WebSocketMessageType =
   | "close_session"
   | "msg"
   | "on_close"
+  | "uce_rag"
 
 export type DocumentStore = {
   documents: Map<string, CASDocument>
+  additional_options: Map<string, { [key: string]: unknown }>
+  ragMessages: Map<string, string[]>
   projectCasId: string
   annoSocket: WebSocket | null
   getAnnotationSocket: () => Promise<WebSocket>
@@ -294,6 +297,12 @@ export type DocumentStore = {
   setProjectCasId: (id: string) => void
   getProjectCasId: () => string
   getById: (id: string) => CASDocument | null
+  setAdditionalOptionsById: (
+    id: string,
+    options: { [key: string]: unknown }
+  ) => void
+  getAdditionalOptionsById: (id: string) => { [key: string]: unknown }
+  addRagMessageById: (id: string, message: string) => void
   remove: (id: string) => void
   removeAll: () => void
 }
@@ -305,6 +314,8 @@ export const useDocumentStore = create<DocumentStore>()(
     (set, get) => {
       return {
         documents: new Map<string, CASDocument>(),
+        additional_options: new Map<string, { [key: string]: unknown }>(),
+        ragMessages: new Map<string, string[]>(),
         projectCasId: "-1",
         annoSocket: null,
         webSocketListeners: new Map<
@@ -330,9 +341,24 @@ export const useDocumentStore = create<DocumentStore>()(
         setDocumentById: (id: string, document: CASDocument) => {
           set({ documents: get().documents.set(id, document) })
         },
+        setAdditionalOptionsById: (
+          id: string,
+          options: { [key: string]: unknown }
+        ) => {
+          set({ additional_options: get().additional_options.set(id, options) })
+        },
+        addRagMessageById: (id: string, message: string) => {
+          const oldMessages = get().ragMessages.get(id) ?? []
+          oldMessages.push(message)
+          set({ ragMessages: get().ragMessages.set(id, oldMessages) })
+        },
         getById: (id: string) => {
           const doc = get().documents.get(id)
           return doc ?? null
+        },
+        getAdditionalOptionsById: (id: string) => {
+          const options = get().additional_options.get(id)
+          return options ?? null
         },
         remove: (id: string) => {
           const docs = get().documents
@@ -385,7 +411,7 @@ export const useDocumentStore = create<DocumentStore>()(
             // alba prod
             //"ws://annotator.core.texttechnologylab.org/uima"
             const webSocket = new WebSocket(
-              "wss://textannotator.texttechnologylab.org/uima"
+              window._env_?.BACKEND_URL || "ws://localhost:4567/uima"
             )
             webSocket.onclose = (closeEvent) => {
               console.log(
@@ -490,6 +516,38 @@ export const useDocumentStore = create<DocumentStore>()(
                     permission: response.data.permission
                   } satisfies Partial<CASDocument>*/
                   //TODO: TextAnnotator.app.getMainView().getController().openSchema(casDocument)
+                  break
+                }
+                case "uce_rag": {
+                  // console.log("uce_rag response", response)
+                  // TODO handle tool
+                  if ("subcmd" in response) {
+                    switch (response.subcmd) {
+                      case "open": {
+                        //
+                        break
+                      }
+                      case "message": {
+                        // TODO do we even need this?
+                        get().addRagMessageById(
+                          response.data.casId,
+                          response.data.message
+                        )
+                        break
+                      }
+                      case "message_update": {
+                        break
+                      }
+                      default: {
+                        console.error(
+                          "Unknown uce_rag subcmd",
+                          response.data.subcmd
+                        )
+                      }
+                    }
+                  } else {
+                    console.error("Unknown uce_rag response", response)
+                  }
                   break
                 }
                 case "change_cas": {

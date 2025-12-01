@@ -19,17 +19,17 @@ export interface Project {
   status: ProjectStatus
   start_at: string
   end_at: string
+  group?: string
 }
 
 export const useProjectStore = create<ProjectState>((set, _get) => ({
   currentProject: null,
   projectList: [
     {
-      key: "Demo_images",
-      name: "Demo Images",
-      url: "projects/34926",
-      description:
-        "An example project containing documents containing images that should be annotated.",
+      key: "rag_eval_chatbot_images",
+      name: "Evaluation",
+      url: "projects/37269",
+      description: "Evaluation",
       languages: ["de"],
       authors: ["Patrick"],
       status: "OPEN",

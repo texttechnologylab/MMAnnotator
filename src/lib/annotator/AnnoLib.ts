@@ -95,6 +95,24 @@ export const useANNO = () => {
     )
   }
 
+  function sendRagMessage(
+    data: { [key: string]: unknown },
+    options: { [key: string]: unknown }
+  ) {
+    // console.log("sendRagMessage", data, options)
+    annoSocketPromise.then((webSocket) =>
+      webSocket.send(
+        JSON.stringify({
+          cmd: "uce_rag",
+          data: {
+            ...data,
+            options: options
+          }
+        })
+      )
+    )
+  }
+
   function addEditToQueue(doc: CASDocument, addr: number, features: any) {
     const batchIdentifier = "_b" + doc.cmdQueue.length + "_"
     doc.cmdQueue.push({
@@ -246,12 +264,20 @@ export const useANNO = () => {
     )
   }
 
-  async function saveCASDocument(doc: CASDocument) {
+  async function saveCASDocument(
+    doc: CASDocument,
+    additional_options: { [key: string]: unknown }
+  ) {
     annoSocketPromise.then((webSocket) =>
       webSocket.send(
         JSON.stringify({
           cmd: "save_cas",
-          data: { casId: doc.id }
+          data: {
+            casId: doc.id,
+            options: {
+              ...additional_options
+            }
+          }
         })
       )
     )
@@ -1023,6 +1049,8 @@ export const useANNO = () => {
     addRemoveToQueue: addRemoveToQueue,
     addRecommendationToQueue: addRecommendationToQueue,
     startQueue: startQueue,
+
+    sendRagMessage: sendRagMessage,
 
     createCASInstanceFromXMI: createCASInstanceFromXMI,
     createCASInstanceFromXMIRepository: createCASInstanceFromXMIwithRepository,
