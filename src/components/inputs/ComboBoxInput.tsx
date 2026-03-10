@@ -11,7 +11,7 @@ import {
   CommandSeparator
 } from "../shadcn/ui/command"
 import { cn } from "@/lib/utils"
-import { Control, FieldPath, FieldValues } from "react-hook-form"
+import type { Control, FieldPath, FieldValues } from "react-hook-form"
 import { InputLabel } from "./common"
 import { CommandList } from "cmdk"
 import { FormField, FormItem } from "../shadcn/ui/form"
@@ -53,14 +53,14 @@ export function ComboboxInput<T extends FieldValues>({
         <FormItem className={className}>
           <Popover open={open} onOpenChange={setOpen}>
             <InputLabel label={label} description={description} />
-            <div>
+            <div className="mt-1">
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   role="combobox"
                   aria-expanded={open}
                   disabled={disabled}
-                  className="w-[100%] justify-between"
+                  className="w-full justify-between"
                 >
                   {value
                     ? Object.values(groupedOptions)
@@ -71,7 +71,7 @@ export function ComboboxInput<T extends FieldValues>({
                 </Button>
               </PopoverTrigger>
             </div>
-            <PopoverContent className="w-[100%] p-0">
+            <PopoverContent className="w-full p-0">
               <Command>
                 <CommandInput placeholder="Select..." />
                 <CommandList className="max-h-[20vh] overflow-scroll">
@@ -144,7 +144,7 @@ export function ComboboxInputMult<T extends FieldValues>({
                   role="combobox"
                   aria-expanded={open}
                   disabled={disabled}
-                  className="w-[100%] justify-between"
+                  className="w-full justify-between"
                 >
                   {value.length > 0
                     ? Object.values(groupedOptions)
@@ -157,7 +157,7 @@ export function ComboboxInputMult<T extends FieldValues>({
                 </Button>
               </PopoverTrigger>
             </div>
-            <PopoverContent className="w-[100%] p-0">
+            <PopoverContent className="w-full p-0">
               <Command>
                 <CommandInput placeholder="Select..." />
                 <CommandList className="max-h-[20vh] overflow-scroll">

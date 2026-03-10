@@ -1,5 +1,5 @@
 import { getCookie } from "../helpers"
-import { CASDocument, ICASDocument } from "../../zustand/useDocument"
+import { CASDocument, type ICASDocument } from "../../zustand/useDocument"
 import { useContext } from "react"
 import { WebSocketContext } from "@/components/wrappers/WebSocketProvider"
 

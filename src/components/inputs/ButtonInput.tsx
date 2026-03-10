@@ -1,9 +1,16 @@
-import { Control, FieldPath, FieldValues } from "react-hook-form"
+import type { Control, FieldPath, FieldValues } from "react-hook-form"
 
 import { FormField, FormItem } from "../shadcn/ui/form"
 import { InputLabel } from "./common"
-import { Button, ButtonGroup } from "react-bootstrap"
-import { ButtonVariant, Variant } from "react-bootstrap/esm/types"
+import { Button } from "../shadcn/ui/button"
+
+type StyleVariant =
+  | "link"
+  | "default"
+  | "destructive"
+  | "outline"
+  | "secondary"
+  | "ghost"
 
 export interface ITextInputProps<T extends FieldValues> {
   control: Control<T>
@@ -12,7 +19,7 @@ export interface ITextInputProps<T extends FieldValues> {
   info?: string
   buttons: {
     label: string
-    style: Variant
+    style: StyleVariant
     value: string
   }[]
   description?: string
@@ -38,47 +45,28 @@ export function ButtonInput<T extends FieldValues>({
       render={({ field: { onChange, value } }) => (
         <FormItem>
           <InputLabel label={label} description={description} />
-          <br />
           {info && (
             <small>
               {info}
               <br />
             </small>
           )}
-          <ButtonGroup>
+          <div className="inline-flex rounded-md shadow-sm mt-1">
             {buttons.map((button) => (
               <Button
                 type="button"
-                variant={getVariantByStyle(button.style, value == button.value)}
+                variant={value == button.value ? button.style : "outline"}
                 onClick={() => onChange(button.value)}
                 key={button.label}
                 disabled={disabled}
+                className="rounded-none first:rounded-l-md last:rounded-r-md border-r-0 last:border-r"
               >
                 {button.label}
               </Button>
             ))}
-          </ButtonGroup>
+          </div>
         </FormItem>
       )}
     />
   )
-}
-
-function getVariantByStyle(style: Variant, primary: boolean): ButtonVariant {
-  switch (style) {
-    case "secondary":
-      return primary ? "secondary" : "outline-secondary"
-    case "danger":
-      return primary ? "danger" : "outline-danger"
-    case "warning":
-      return primary ? "warning" : "outline-warning"
-    case "dark":
-      return primary ? "dark" : "outline-dark"
-    case "light":
-      return primary ? "light" : "outline-light"
-    case "info":
-      return primary ? "info" : "outline-info"
-    default:
-      return primary ? "primary" : "outline-primary"
-  }
 }

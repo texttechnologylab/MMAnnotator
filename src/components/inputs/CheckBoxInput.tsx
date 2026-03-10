@@ -1,8 +1,8 @@
 import {
-  Control,
+  type Control,
   Controller,
-  FieldPathByValue,
-  FieldValues
+  type FieldPathByValue,
+  type FieldValues
 } from "react-hook-form"
 import { Checkbox } from "../shadcn/ui/checkbox"
 

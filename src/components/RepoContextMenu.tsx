@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react"
+import { type ReactNode, useEffect, useState } from "react"
 import { ComboboxInputMult } from "./inputs/ComboBoxInput"
 import { SelectInput } from "./inputs/SelectInput"
 import { InputLabel } from "./inputs/common"
@@ -23,9 +23,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./shadcn/ui/tabs"
 import { useUser } from "@/zustand/useUser"
 import { useForm } from "react-hook-form"
 import {
-  AccessPermission,
-  GroupCombo,
-  UserCombo,
+  type AccessPermission,
+  type GroupCombo,
+  type UserCombo,
   getAccessPermissionsForTargets,
   getListGroupsCombo,
   getListUsersCombo,
@@ -231,7 +231,7 @@ export const RepoContextMenu = ({
                       access ? access.sort((a, b) => b.level - a.level) : []
                     }
                   >
-                    <div className="h-[100%] overflow-scroll">
+                    <div className="h-full overflow-scroll">
                       <DataTableContent />
                     </div>
                   </DataTable>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { CASDocument, useDocumentStore } from "../zustand/useDocument"
 import { useANNO } from "../lib/annotator/AnnoLib"
 import { useUser } from "../zustand/useUser"
-import { BasicFormValues, createViewFromUserName } from "@/lib/helpers"
+import { type BasicFormValues, createViewFromUserName } from "@/lib/helpers"
 import { useLoadingState } from "@/zustand/useLoadingState"
 
 export type FormCASTypes = "org.texttechnologylab.annotation.core.Category"

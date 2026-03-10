@@ -1,0 +1,55 @@
+site_name: MM-Annotator Documentation
+site_description: Documentation for the MultiMedia Annotator Frontend
+repo_url: https://github.com/texttechnologylab/MMAnnotator
+repo_name: texttechnologylab/MMAnnotator
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Configuration: getting-started/configuration.md
+  - Architecture:
+      - Project Structure: architecture/project-structure.md
+      - State Management: architecture/state-management.md
+      - API & WebSockets: architecture/api.md
+  - Components:
+      - Overview: components/overview.md
+      - Inputs: components/inputs.md
+  - Deployment:
+      - Docker: deployment/docker.md

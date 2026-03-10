@@ -1,16 +1,11 @@
-import { ReactNode } from "react"
-import { Col, Row } from "react-bootstrap"
+import type { ReactNode } from "react"
 
 export const HorizontalDivider = ({ children }: { children: ReactNode }) => {
   return (
-    <Row>
-      <Col>
-        <hr />
-      </Col>
-      <Col xs="auto">{children}</Col>
-      <Col>
-        <hr />
-      </Col>
-    </Row>
+    <div className="flex items-center gap-2">
+      <hr className="flex-1" />
+      <div className="shrink-0">{children}</div>
+      <hr className="flex-1" />
+    </div>
   )
 }

@@ -411,7 +411,8 @@ export const useDocumentStore = create<DocumentStore>()(
             // alba prod
             //"ws://annotator.core.texttechnologylab.org/uima"
             const webSocket = new WebSocket(
-              window._env_?.BACKEND_URL || "ws://localhost:4567/uima"
+              window._env_?.BACKEND_URL ||
+                "wss://eval.textannotator.texttechnologylab.org/uima"
             )
             webSocket.onclose = (closeEvent) => {
               console.log(
@@ -430,7 +431,6 @@ export const useDocumentStore = create<DocumentStore>()(
                   label: "Reconnect"
                 },
                 closeButton: true,
-                important: true,
                 duration: Infinity
               })
               get().annoSocket = null
@@ -452,7 +452,6 @@ export const useDocumentStore = create<DocumentStore>()(
                 description:
                   "An error occured. If issues persist please refresh the Page (F5).",
                 closeButton: true,
-                important: true,
                 duration: Infinity
               })
               get().annoSocket?.close()
@@ -504,7 +503,6 @@ export const useDocumentStore = create<DocumentStore>()(
                 }
                 case "open_schema": {
                   // TODO!
-                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                   /*const casDocument = {
                     id: response.data.casId,
                     name: response.data.name,

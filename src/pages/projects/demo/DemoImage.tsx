@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import { Col, Container, Row } from "react-bootstrap"
 import { useForm } from "react-hook-form"
 import { SelectInput } from "../../../components/inputs/SelectInput"
 import { useUser } from "../../../zustand/useUser"
@@ -38,6 +37,7 @@ import {
 import { ChevronDown } from "lucide-react"
 import { ButtonInput } from "@/components/inputs/ButtonInput"
 import { NumberInput } from "@/components/inputs/CustomInput"
+import type { StyleVariant } from "@/components/inputs/common"
 
 const defaultValues = {
   K1: DefaultFormCategory,
@@ -57,12 +57,12 @@ type FormValues = typeof defaultValues
 const buttons = [
   {
     label: "Ja",
-    style: "dark",
+    style: "default" as StyleVariant,
     value: "yes"
   },
   {
     label: "Nein",
-    style: "dark",
+    style: "default" as StyleVariant,
     value: "no"
   }
 ]
@@ -316,8 +316,8 @@ export function Page(props: PageProps) {
   }
 
   return (
-    <Container fluid>
-      <Row>
+    <div className="w-full px-4">
+      <div className="flex flex-col lg:flex-row gap-4">
         {document && (
           <RagBot
             casId={casId}
@@ -328,7 +328,7 @@ export function Page(props: PageProps) {
             casTextOrder={casTextOrder}
           />
         )}
-        <Col sm={12} lg={6} style={{ height: "75vh" }}>
+        <div className="w-full lg:w-1/2 h-[75vh]">
           <Card style={{ opacity: loading ? "0.5" : "1" }} className={"mb-3"}>
             <CardContent>
               <SzenarioText
@@ -373,8 +373,8 @@ export function Page(props: PageProps) {
             </CardContent>
           </Card>
           <DynamicImageList casId={casId} />
-        </Col>
-        <Col sm={12} lg={6} style={{ overflow: "scroll", height: "90vh" }}>
+        </div>
+        <div className="w-full lg:w-1/2 overflow-auto h-[90vh]">
           <Form {...form}>
             <form onSubmit={handleSubmit(onSubmit)} hidden={loading}>
               <Card style={{ opacity: loading ? "0.5" : "1" }}>
@@ -390,7 +390,7 @@ export function Page(props: PageProps) {
                   >
                     <p>
                       User: <strong className={"ml-1"}>{userName}</strong>{" "}
-                      <span className={"ml-2 text-muted small"}>
+                      <span className={"ml-2 text-muted-foreground small"}>
                         (will be filled in automatically)
                       </span>
                     </p>
@@ -603,10 +603,10 @@ export function Page(props: PageProps) {
               </div>
             </form>
           </Form>
-        </Col>
-      </Row>
+        </div>
+      </div>
       <LoadingStateDrawer state={loadingState} />
-    </Container>
+    </div>
   )
 }
 

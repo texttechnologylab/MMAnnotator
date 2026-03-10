@@ -1,18 +1,15 @@
-import { useEffect, useState } from "react"
-import { Placeholder, PlaceholderProps } from "react-bootstrap"
+import { useMemo } from "react"
 
 // TODO: Properly do row calculations
 export const DynamicPlaceholder = ({
-  rows,
-  props
+  rows
 }: {
   rows: number
-  props: PlaceholderProps
+  props?: Record<string, unknown>
 }) => {
   // Create array of numbers that add up to max size
-  const [sizes, setSizes] = useState<number[]>([])
 
-  useEffect(() => {
+  const sizes = useMemo(() => {
     const maxSize = rows * 12
     const sizes = []
     let i = 0
@@ -20,6 +17,7 @@ export const DynamicPlaceholder = ({
     while (i < maxSize) {
       let j = 0
       while (j < 12) {
+        // eslint-disable-next-line react-hooks/purity
         const size = 2 + Math.floor(Math.random() * 6)
         if (j + size > 12) break
         sizes.push(size)
@@ -27,15 +25,19 @@ export const DynamicPlaceholder = ({
       }
       i += 12
     }
-    setSizes(sizes)
+    return sizes
   }, [rows])
   return (
-    <Placeholder {...props} animation="glow">
-      {sizes.map((size, i) => (
-        <>
-          <Placeholder xs={size} key={i} />{" "}
-        </>
-      ))}
-    </Placeholder>
+    <div className="animate-pulse space-y-2">
+      <div className="flex flex-wrap gap-1">
+        {sizes.map((size, i) => (
+          <div
+            key={i}
+            className="h-4 rounded bg-muted"
+            style={{ width: `${(size / 12) * 100}%` }}
+          />
+        ))}
+      </div>
+    </div>
   )
 }

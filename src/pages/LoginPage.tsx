@@ -1,10 +1,13 @@
-import { Button, Col, Container, Form, Row } from "react-bootstrap"
 import { useForm } from "react-hook-form"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { useEffect } from "react"
 import { useUser } from "../zustand/useUser"
 import md5 from "md5"
 import { loginPublic } from "@/lib/annotator/login"
+import { Button } from "@/components/shadcn/ui/button"
+import { Input } from "@/components/shadcn/ui/input"
+import { Label } from "@/components/shadcn/ui/label"
+
 interface AnnotatorForm {
   userName: string | null
   password: string | null
@@ -18,6 +21,9 @@ export default function LoginPage() {
   })
 
   const navigate = useNavigate()
+  const location = useLocation()
+  const returnTo =
+    (location.state as { returnTo?: string })?.returnTo || "/projects"
 
   useEffect(() => {
     setValue("userName", userName)
@@ -29,45 +35,42 @@ export default function LoginPage() {
       return
     }
     update()
-    navigate("/projects")
+    navigate(returnTo, { replace: true })
   }
 
   return (
-    <Container>
-      <Row className="justify-content-md-center">
-        <Col md={6}>
-          <Form onSubmit={handleSubmit(onSubmit)}>
-            <Form.Group className="mb-3">
-              <Form.Label className={"mb-2"}>
+    <div className="container mx-auto px-4">
+      <div className="flex justify-center">
+        <div className="w-full max-w-md">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="mb-3 space-y-2">
+              <Label>
                 Please login using your <strong>MM-Annotator</strong> account
                 credentials to continue:
-              </Form.Label>
-              <Form.Control
+              </Label>
+              <Input
                 type="text"
-                className={"mb-2"}
                 placeholder="Username"
                 required
                 {...register("userName")}
               />
-              <Form.Control
+              <Input
                 type="password"
                 placeholder="Password"
                 required
                 {...register("password")}
               />
-            </Form.Group>
-            <Button variant="primary" type="submit">
-              Login
-            </Button>
-          </Form>
-          <div className="text-muted mt-2">
+            </div>
+            <Button type="submit">Login</Button>
+          </form>
+          <div className="text-muted-foreground mt-2">
             <small>
               If you don't have an account yet, or can't login, please contact
               the TTLab.
             </small>
           </div>
-        </Col>
-      </Row>
-    </Container>
+        </div>
+      </div>
+    </div>
   )
 }

@@ -1,10 +1,10 @@
 "use client"
 
 import {
-  ColumnDef,
-  SortingState,
-  Table,
-  VisibilityState,
+  type ColumnDef,
+  type SortingState,
+  type Table,
+  type VisibilityState,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
@@ -13,8 +13,10 @@ import {
 
 import { createContext, useEffect, useState } from "react"
 
-export interface DataTableProps<TData, TValue>
-  extends Omit<DataTableContextProps<TData, TValue>, "table"> {
+export interface DataTableProps<TData, TValue> extends Omit<
+  DataTableContextProps<TData, TValue>,
+  "table"
+> {
   children: React.ReactNode
 }
 export interface DataTableContextProps<TData, TValue> {

@@ -1,14 +1,41 @@
 # MultiMedia Annotator Frontend
 
-Frontend for the MM-Annotator.
+React frontend for the [TextAnnotator](https://github.com/texttechnologylab/TextAnnotator) backend, built for creating and managing text/multimedia annotation projects.
 
----
+## Getting Started
 
-A demo website is available under the following URL: [https://www.eval.textannotator.texttechnologylab.org/](https://www.eval.textannotator.texttechnologylab.org/)
+```bash
+npm install
+npm run dev
+```
 
-UserName: DemoAnnotator
-Password: demo2025
+Build for production:
 
----
+```bash
+npm run build
+```
 
-The backend can be found here: [TextAnnotator](https://github.com/texttechnologylab/TextAnnotator)
+Docker:
+
+```bash
+docker build -t mm-annotator .
+docker run -p 80:80 mm-annotator
+```
+
+## Project Structure
+
+```
+src/
+  pages/          # Route pages (Login, Projects, Overview, Annotation, Admin)
+  components/     # Reusable UI (NavBar, RagBot, inputs, shadcn wrappers)
+  hooks/          # Data-fetching hooks (useProject, useImages, useCas, etc.)
+  lib/            # API clients, helpers, resource utilities
+  zustand/        # Global stores (user, project, document, loading state)
+```
+
+## Demo
+
+[https://www.eval.textannotator.texttechnologylab.org/](https://www.eval.textannotator.texttechnologylab.org/)
+
+- Username: `DemoAnnotator`
+- Password: `demo2025`

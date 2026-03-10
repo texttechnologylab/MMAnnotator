@@ -27,7 +27,6 @@ import {
 } from "@/components/shadcn/ui/table"
 import { Spinner } from "@/components/shadcn/ui/spinner"
 import { Button } from "@/components/shadcn/ui/button"
-import { Container, Row } from "react-bootstrap"
 import { Progress } from "@/components/shadcn/ui/progress"
 import { useContext, useEffect, useState } from "react"
 import { WebSocketContext } from "@/components/wrappers/WebSocketProvider"
@@ -139,12 +138,6 @@ function OverviewContainer() {
     )
   }, [annoSocketPromise])
 
-  useEffect(() => {
-    if (isAdmin) {
-      getAccessPermissions()
-    }
-  }, [project])
-
   console.log(accessMap)
 
   const getAnnnotators = (mongoid?: string) => {
@@ -189,6 +182,12 @@ function OverviewContainer() {
     )
   }
 
+  useEffect(() => {
+    if (isAdmin) {
+      getAccessPermissions()
+    }
+  }, [project])
+
   const exportData = () => {
     setLoadingState(LoadingState.LOADING)
     annoSocketPromise.then((socket) => {
@@ -220,9 +219,9 @@ function OverviewContainer() {
     new URLSearchParams(search).get("d") == "1" || false
 
   return (
-    <Container>
-      <Row className="justify-content-md-center">
-        <Card>
+    <div className="container mx-auto px-4">
+      <div className="flex justify-center">
+        <Card className="w-full">
           <CardContent className="p-0 pb-4 max-h-[80vh] overflow-scroll">
             <Table>
               <TableHeader>
@@ -273,7 +272,7 @@ function OverviewContainer() {
                   .map((task, index) => {
                     return (
                       <TableRow key={"projects-big-list-a-" + index}>
-                        <TableCell className="w-[60%] overflow-ellipsis">
+                        <TableCell className="w-[60%] text-ellipsis">
                           <a
                             href={`${projectId}/Task?${limitReasoningContextsUrlPart}id=${task.id}`}
                             style={{
@@ -366,24 +365,20 @@ function OverviewContainer() {
             </Table>
           </CardContent>
           <CardContent>
-            <div className="flex">
-              <Separator className="mt-3 mr-2 h-1 w-[44%]" />
-              <span className="text-nowrap text-lg flex gap-2">
+            <div className="flex items-center gap-2 mt-3">
+              <Separator className="flex-1" />
+              <span className="text-nowrap text-lg flex items-center gap-2 px-2">
                 Admin Panel{isAdmin ? <LockKeyholeOpen /> : <LockKeyhole />}
               </span>
-              <Separator className="mt-3 ml-2 h-1 w-[44%]" />
+              <Separator className="flex-1" />
             </div>
             <Collapsible disabled={!isAdmin} onOpenChange={setCollapsibleOpen}>
-              <CollapsibleTrigger className="w-100">
+              <CollapsibleTrigger className="w-full flex justify-center">
                 <div className={!isAdmin ? "text-gray-200" : ""}>
-                  {collapsibleOpen ? (
-                    <ChevronUp className="m-auto" />
-                  ) : (
-                    <ChevronDown className="m-auto" />
-                  )}
+                  {collapsibleOpen ? <ChevronUp /> : <ChevronDown />}
                 </div>
               </CollapsibleTrigger>
-              <CollapsibleContent className="w-[100%]">
+              <CollapsibleContent className="w-full">
                 <CardTitle>Overall Progress</CardTitle>
                 <br />
                 <div>
@@ -397,7 +392,7 @@ function OverviewContainer() {
                   </div>
                 </div>
                 <Drawer>
-                  <DrawerTrigger className="w-[100%] mt-2" asChild>
+                  <DrawerTrigger className="w-full mt-2" asChild>
                     <Button>Export</Button>
                   </DrawerTrigger>
                   <DrawerContent className="h-80">
@@ -429,7 +424,7 @@ function OverviewContainer() {
             </Collapsible>
           </CardContent>
         </Card>
-      </Row>
-    </Container>
+      </div>
+    </div>
   )
 }

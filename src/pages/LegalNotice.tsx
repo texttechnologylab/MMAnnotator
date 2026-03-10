@@ -4,11 +4,10 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/shadcn/ui/card"
-import { Container } from "react-bootstrap"
 
 export default function LegalNotice() {
   return (
-    <Container>
+    <div className="container mx-auto px-4">
       <Card>
         <CardHeader>
           <CardTitle>Legal Notice</CardTitle>
@@ -90,6 +89,6 @@ export default function LegalNotice() {
           law, ordinance, statutes of Goethe University etc.).
         </CardContent>
       </Card>
-    </Container>
+    </div>
   )
 }

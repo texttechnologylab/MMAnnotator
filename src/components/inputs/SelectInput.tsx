@@ -1,4 +1,4 @@
-import { Control, FieldPath, FieldValues } from "react-hook-form"
+import type { Control, FieldPath, FieldValues } from "react-hook-form"
 import {
   Select,
   SelectContent,
@@ -45,19 +45,21 @@ export function SelectInput<T extends FieldValues>({
       render={({ field }) => (
         <FormItem className={"mt-3"}>
           <InputLabel label={label} description={description} />
-          <Select
-            onValueChange={field.onChange}
-            value={field.value}
-            disabled={disabled}
-          >
-            <FormControl>
-              <SelectTrigger>
-                <SelectValue placeholder={label} />
-              </SelectTrigger>
-            </FormControl>
+          <div className="mt-2">
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
+              disabled={disabled}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder={label} />
+                </SelectTrigger>
+              </FormControl>
 
-            <SelectOptions options={options} />
-          </Select>
+              <SelectOptions options={options} />
+            </Select>
+          </div>
           <FormMessage />
         </FormItem>
       )}

@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
+import { Slot as SlotPrimitive } from "radix-ui"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { CircleAlert, CircleCheck, Loader2 } from "lucide-react"
@@ -41,7 +41,8 @@ export const enum LoadingState {
 }
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean
   cancelable?: boolean
@@ -86,7 +87,7 @@ const LoadingButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     if (asChild) {
       return (
-        <Slot ref={ref} {...props}>
+        <SlotPrimitive.Slot ref={ref} {...props}>
           <>
             {React.Children.map(
               children as React.ReactElement,
@@ -103,7 +104,7 @@ const LoadingButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
               }
             )}
           </>
-        </Slot>
+        </SlotPrimitive.Slot>
       )
     }
 

@@ -1,6 +1,6 @@
 import {
-  RepositoryData,
-  Response,
+  type RepositoryData,
+  type Response,
   getRepositories
 } from "@/lib/resources/repository"
 import { useUser } from "@/zustand/useUser"
