@@ -1,5 +1,3 @@
-import { Container } from "react-bootstrap"
-
 export default function HelpPage() {
-  return <Container></Container>
+  return <div className="container mx-auto px-4"></div>
 }

@@ -1,4 +1,7 @@
-import { ProjectDocument, ResourceProject } from "@/lib/resources/repository"
+import type {
+  ProjectDocument,
+  ResourceProject
+} from "@/lib/resources/repository"
 import { create } from "zustand"
 
 export interface ProjectStats {

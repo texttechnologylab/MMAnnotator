@@ -1,8 +1,10 @@
-import { Button, Col, Container, Form, Row } from "react-bootstrap"
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
 import { useEffect } from "react"
 import { useUser } from "../zustand/useUser"
+import { Button } from "@/components/shadcn/ui/button"
+import { Input } from "@/components/shadcn/ui/input"
+import { Label } from "@/components/shadcn/ui/label"
 
 interface AnnotatorForm {
   annotator: string | null
@@ -27,24 +29,22 @@ export default function AnnotatorPage() {
   }
 
   return (
-    <Container>
-      <Row className="justify-content-md-center">
-        <Col md={8}>
-          <Form onSubmit={handleSubmit(onSubmit)}>
-            <Form.Group className="mb-3">
-              <Form.Label>Please enter your name to continue</Form.Label>
-              <Form.Control
+    <div className="container mx-auto px-4">
+      <div className="flex justify-center">
+        <div className="w-full max-w-2xl">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="mb-3 space-y-2">
+              <Label>Please enter your name to continue</Label>
+              <Input
                 type="text"
                 placeholder="Name"
                 {...register("annotator")}
               />
-            </Form.Group>
-            <Button variant="primary" type="submit">
-              OK
-            </Button>
-          </Form>
-        </Col>
-      </Row>
-    </Container>
+            </div>
+            <Button type="submit">OK</Button>
+          </form>
+        </div>
+      </div>
+    </div>
   )
 }

@@ -1,4 +1,4 @@
-import { Control, FieldPath, FieldValues } from "react-hook-form"
+import type { Control, FieldPath, FieldValues } from "react-hook-form"
 
 import {
   FormControl,
@@ -42,7 +42,7 @@ export function NumberInput<T extends FieldValues>({
             <Input
               {...field}
               type="number"
-              className="form-input"
+              className="form-input mt-2"
               disabled={disabled}
               {...inputProps}
             />

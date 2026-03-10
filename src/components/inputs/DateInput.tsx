@@ -12,7 +12,7 @@ import {
   PopoverTrigger
 } from "@/components/shadcn/ui/popover"
 import { FormField, FormItem, FormMessage } from "../shadcn/ui/form"
-import { Control, FieldPath, FieldValues } from "react-hook-form"
+import type { Control, FieldPath, FieldValues } from "react-hook-form"
 import { InputLabel } from "./common"
 
 export interface ITextInputProps<T extends FieldValues> {
@@ -43,7 +43,7 @@ export function DateInput<T extends FieldValues>({
               <Button
                 variant={"outline"}
                 className={cn(
-                  "w-[100%] justify-start text-left font-normal",
+                  "w-full justify-start text-left font-normal",
                   !field.value && "text-muted-foreground"
                 )}
               >

@@ -1,11 +1,14 @@
 import { useANNO } from "@/lib/annotator/AnnoLib"
 import { useDocumentStore } from "@/zustand/useDocument"
-import { ProjectStatsReturn, useProjectStore } from "@/zustand/useProjectStats"
+import {
+  type ProjectStatsReturn,
+  useProjectStore
+} from "@/zustand/useProjectStats"
 import { useUser } from "@/zustand/useUser"
 import { useEffect } from "react"
 
 import { createViewFromUserName } from "@/lib/helpers"
-import {
+import type {
   ProjectDocument,
   ProjectRepository,
   ResourceProject
@@ -67,13 +70,13 @@ export const useProjectStats = (
   // FIXME:
   const completed =
     projectId && projectId in completedStore
-      ? completedStore[projectId] ?? []
+      ? (completedStore[projectId] ?? [])
       : []
   const raw =
-    projectId && projectId in rawStore ? rawStore[projectId] ?? null : null
+    projectId && projectId in rawStore ? (rawStore[projectId] ?? null) : null
   const projectDocuments =
     projectId && projectId in projectDocumentsStore
-      ? projectDocumentsStore[projectId] ?? []
+      ? (projectDocumentsStore[projectId] ?? [])
       : []
 
   return { completed, raw, projectDocuments }

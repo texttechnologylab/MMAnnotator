@@ -1,6 +1,6 @@
-import { ReactElement, useEffect } from "react"
+import { type ReactElement, useEffect } from "react"
 import { useUser } from "../../zustand/useUser"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { checkLogin } from "@/lib/annotator/login"
 
 export default function WithAuth({
@@ -10,12 +10,22 @@ export default function WithAuth({
 }) {
   const { userName, session } = useUser()
   const navigate = useNavigate()
+  const location = useLocation()
+
   useEffect(() => {
-    if (!session) navigate("/user")
+    const redirectToLogin = () =>
+      navigate("/user", {
+        state: { returnTo: location.pathname + location.search }
+      })
+
+    if (!session) {
+      redirectToLogin()
+      return
+    }
     checkLogin().then((valid) => {
-      if (!valid) navigate("/user")
+      if (!valid) redirectToLogin()
     })
-  }, [userName, navigate, session])
+  }, [userName, navigate, session, location])
 
   return <>{userName && { ...children }}</>
 }

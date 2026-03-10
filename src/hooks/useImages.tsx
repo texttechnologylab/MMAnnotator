@@ -1,6 +1,6 @@
 import { useANNO } from "@/lib/annotator/AnnoLib"
 import { getRawToolElements } from "@/lib/helpers"
-import { ToolEntry, useDocumentStore } from "@/zustand/useDocument"
+import { type ToolEntry, useDocumentStore } from "@/zustand/useDocument"
 import { useEffect, useState } from "react"
 
 export const useImages = (casId: string, pageSize?: number) => {

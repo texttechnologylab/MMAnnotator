@@ -1,4 +1,4 @@
-import { ToolEntry } from "@/zustand/useDocument"
+import type { ToolEntry } from "@/zustand/useDocument"
 import {
   Dialog,
   DialogClose,
@@ -68,9 +68,9 @@ export const DynamicImageList = ({ casId }: { casId: string }) => {
 
 export function ImageDialog({ image }: { image: string }) {
   return (
-    <DialogContent className={"w-[100%]"}>
+    <DialogContent className={"w-full"}>
       <DialogClose>
-        <img className={"w-[100%] cursor-zoom-out"} src={image} />
+        <img className={"w-full cursor-zoom-out"} src={image} />
       </DialogClose>
     </DialogContent>
   )

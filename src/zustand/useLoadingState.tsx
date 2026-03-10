@@ -26,10 +26,9 @@ export const useLoadingState = (states: LoadingState[]) => {
   const completeStep = (id: number) => {
     const index = loadingState.states.findIndex((state) => state.id === id)
     if (index === -1) return
-    const newState = loadingState.states
-    for (let i = 0; i <= index; i++) {
-      newState[i].completed = true
-    }
+    const newState = loadingState.states.map((state, i) =>
+      i <= index ? { ...state, completed: true } : state
+    )
     setLoadingState({
       states: newState,
       currentStep: index,

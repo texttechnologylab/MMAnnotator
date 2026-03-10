@@ -1,10 +1,10 @@
 import { useEffect } from "react"
 import {
-  FieldPath,
-  FieldValues,
-  Path,
-  PathValue,
-  UseFormReturn,
+  type FieldPath,
+  type FieldValues,
+  type Path,
+  type PathValue,
+  type UseFormReturn,
   useWatch
 } from "react-hook-form"
 

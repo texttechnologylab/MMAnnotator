@@ -3,7 +3,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../shadcn/ui/popover"
 import { Card, CardDescription, CardHeader } from "../shadcn/ui/card"
 import { FormLabel } from "../shadcn/ui/form"
 import { cn } from "@/lib/utils"
-import { memo, ReactNode } from "react"
+import { memo, type ReactNode } from "react"
 
 export const InputLabel = memo(
   ({ label, description }: { label: string; description?: ReactNode }) => {
@@ -17,7 +17,10 @@ export const InputLabel = memo(
             >
               {label}
             </label>
-            <PopoverTrigger hidden={!description} className={cn("mx-1")}>
+            <PopoverTrigger
+              hidden={!description}
+              className={cn("mx-1 cursor-pointer")}
+            >
               <BsInfoCircle />
             </PopoverTrigger>
           </div>
@@ -35,3 +38,11 @@ export const InputLabel = memo(
     )
   }
 )
+
+export type StyleVariant =
+  | "link"
+  | "default"
+  | "destructive"
+  | "outline"
+  | "secondary"
+  | "ghost"

@@ -1,6 +1,6 @@
 import { useDocumentStore } from "@/zustand/useDocument"
 import { useUser } from "@/zustand/useUser"
-import { ReactNode, createContext, useEffect, useState } from "react"
+import { type ReactNode, createContext, useEffect, useState } from "react"
 import { toast } from "sonner"
 
 export interface WebSocketContextType {

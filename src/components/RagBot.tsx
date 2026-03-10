@@ -1,10 +1,9 @@
 import { useEffect, useState, useRef } from "react"
 import Markdown from "react-markdown"
 import rehypeRaw from "rehype-raw"
-import { Row, Col } from "react-bootstrap"
 import { LoadingButton, LoadingState } from "./shadcn/ui/loading-button"
 import { useDocumentStore } from "@/zustand/useDocument"
-import { SubmitHandler, useForm } from "react-hook-form"
+import { type SubmitHandler, useForm } from "react-hook-form"
 import {
   ResizableHandle,
   ResizablePanel,
@@ -59,7 +58,7 @@ const enhanceMessage = (message: any) => {
     (_match: any, content: any) => {
       const randomId = Math.random().toString(36).substring(2, 15)
       const escapedContent = `&lt;think&gt;<br/>${content}<br/>&lt;/think&gt;`
-      return `<div class="text-muted mb-1 small" id="${randomId}">${escapedContent}</div>`
+      return `<div class="text-muted-foreground mb-1 text-sm" id="${randomId}">${escapedContent}</div>`
     }
   )
 }
@@ -210,10 +209,10 @@ export const RagBot = ({
               // message_final = message.slice(0, jsonStart) + message.slice(jsonEnd)
               message_final = message_final.replace(jsonString, "")
               if (!tool_action) {
-                message_final += `<ul class="mt-2 list-group small">`
+                message_final += `<ul class="mt-2 text-sm space-y-1">`
                 tool_action = true
               }
-              message_final += `<li class="list-group-item list-group-item-success"><input class="form-check-input me-1" type="checkbox" checked="checked" disabled="disabled"> Setting criteria <strong>${criteria_id}</strong> to <strong>${criteria_value}</strong></li>`
+              message_final += `<li class="flex items-center gap-1 p-1 bg-green-100 rounded text-green-800"><input class="mr-1" type="checkbox" checked="checked" disabled="disabled"> Setting criteria <strong>${criteria_id}</strong> to <strong>${criteria_value}</strong></li>`
               // console.log("final message", message_final)
             }
           } catch (e) {
@@ -315,6 +314,7 @@ export const RagBot = ({
 
     const next_messages: ChatMessage[] = [
       {
+        // eslint-disable-next-line react-hooks/purity
         timestamp: Date.now(),
         role: "user",
         text: formData.message
@@ -328,6 +328,7 @@ export const RagBot = ({
     })
     if (streaming) {
       next_messages.push({
+        // eslint-disable-next-line react-hooks/purity
         timestamp: Date.now(),
         role: "assistant",
         text: ""
@@ -348,10 +349,9 @@ export const RagBot = ({
               e.preventDefault()
             }}
             className={
-              "btn btn-primary text-center right-3 bottom-2 position-fixed d-flex flex-column align-items-center justify-content-center"
+              "bg-primary text-primary-foreground text-center fixed right-3 bottom-2 flex flex-col items-center justify-center rounded-full"
             }
             style={{
-              borderRadius: "100%",
               border: "2px solid white",
               width: "65px",
               height: "65px",
@@ -379,7 +379,7 @@ export const RagBot = ({
       )}
       {isOpen && casId && (
         <ResizablePanelGroup
-          direction="horizontal"
+          orientation="horizontal"
           className="fixed h-full border-r-4 z-10 top-0 mb-20  pointer-events-none"
         >
           <ResizablePanel
@@ -395,12 +395,12 @@ export const RagBot = ({
           >
             <div
               className={
-                "flex flex-row align-items-start z-20 border-b drop-shadow-md "
+                "flex flex-row items-start z-20 border-b drop-shadow-md "
               }
             >
               <div>
                 <strong>UCE</strong> RAG Bot
-                <span className={"ml-2 text-muted small"}>
+                <span className={"ml-2 text-muted-foreground text-sm"}>
                   {proband && (
                     <span>
                       Proband <strong>{proband}</strong>
@@ -418,20 +418,22 @@ export const RagBot = ({
                   setIsOpen(false)
                   e.preventDefault()
                 }}
-                className={"btn btn-dark btn-sm ms-auto rounded"}
+                className={
+                  "bg-secondary text-secondary-foreground text-sm ml-auto rounded px-2 py-1"
+                }
               >
                 <span className={"font-bold"} style={{ fontSize: "110%" }}>
                   &times;
                 </span>
               </button>
             </div>
-            <div className="overflow-scroll overflow-x-hidden h-[100%] pb-10">
+            <div className="overflow-scroll overflow-x-hidden h-full pb-10">
               {!chatId && casId && setCriteriaValue && (
-                <Row>
-                  <Col xs={6}>
+                <div className="flex gap-2">
+                  <div className="flex-1">
                     {/* TODO load available models from UCE */}
                     <select
-                      className="form-select"
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                       value={chatModel}
                       onChange={(e) => setChatModel(e.target.value)}
                     >
@@ -442,16 +444,11 @@ export const RagBot = ({
                         Qwen 2.5 VL (7b) - recommended for text and images
                       </option>
                     </select>
-                  </Col>
-                  <Col xs={6}>
+                  </div>
+                  <div className="flex-1">
                     <LoadingButton
                       loading={loading}
-                      className={"btn btn-primary"}
                       onClick={() => {
-                        // TODO get from project
-                        // const systemPrompt = ""
-                        // TODO get from project
-                        // const systemMessage = ""
                         setLoading(LoadingState.LOADING)
                         ragMessage("open", {
                           modelName: chatModel,
@@ -464,8 +461,8 @@ export const RagBot = ({
                     >
                       Start Chat
                     </LoadingButton>
-                  </Col>
-                </Row>
+                  </div>
+                </div>
               )}
               <ul>
                 {messages.map((message, index) => {
@@ -481,23 +478,22 @@ export const RagBot = ({
                       }
                       className={
                         (message.role === "user"
-                          ? "ms-auto text-end"
-                          : "text-start") + " card mt-2"
+                          ? "ml-auto text-end"
+                          : "text-start") +
+                        " rounded-lg border bg-card text-card-foreground shadow-sm mt-2"
                       }
                       style={{
                         width: "80%"
                       }}
                     >
-                      <div className={"card-body p-2"}>
-                        <div className={"card-title"}>
-                          <span className={"text-muted small"}>
+                      <div className={"p-2"}>
+                        <div>
+                          <span className={"text-muted-foreground text-sm"}>
                             {new Date(message.timestamp).toLocaleTimeString()}
                           </span>
                           <br />
                         </div>
-                        <div className={"card-text"}>
-                          {renderMessage(message.text)}
-                        </div>
+                        <div>{renderMessage(message.text)}</div>
                       </div>
                     </li>
                   )
@@ -506,8 +502,8 @@ export const RagBot = ({
               </ul>
               {chatId && (
                 <form onSubmit={handleSubmit(onSubmit)}>
-                  <div className={"ms-auto mt-4 row justify-content-end"}>
-                    <div className={"col-auto"}>
+                  <div className={"ml-auto mt-4 flex justify-end gap-2"}>
+                    <div>
                       <Textarea
                         className="w-[500px]"
                         spellCheck
@@ -530,7 +526,7 @@ export const RagBot = ({
                       </div>
                     </div>
 
-                    <div className={"col-auto"}>
+                    <div>
                       <LoadingButton loading={loading} type="submit">
                         Send
                       </LoadingButton>
@@ -539,14 +535,18 @@ export const RagBot = ({
                 </form>
               )}
               {chatId && (
-                <div className={"ms-auto mt-1 text-muted text-xs text-center"}>
+                <div
+                  className={
+                    "ml-auto mt-1 text-muted-foreground text-xs text-center"
+                  }
+                >
                   <a
                     href="#"
                     onClick={(e) => {
                       setIsOpen(false)
                       e.preventDefault()
                     }}
-                    className={"btn btn-link btn-sm"}
+                    className={"text-primary underline text-sm px-2 py-1"}
                     style={{
                       fontSize: "80%"
                     }}
@@ -561,7 +561,7 @@ export const RagBot = ({
                       setLoading(LoadingState.NEUTRAL)
                       e.preventDefault()
                     }}
-                    className={"btn btn-link btn-sm"}
+                    className={"text-primary underline text-sm px-2 py-1"}
                     style={{
                       fontSize: "80%"
                     }}

@@ -1,4 +1,4 @@
-import { ProjectStatus } from "@/zustand/useProject"
+import type { ProjectStatus } from "@/zustand/useProject"
 
 export type Response<T> = {
   success: boolean
@@ -96,7 +96,7 @@ export interface ProjectDocument extends ProjectChildBase {
 export interface ResourceProject {
   access: number
   description: string
-  type: "PROJECT"
+  type: "PROJECT" | "REPOSITORY"
   children: (ProjectRepository | ProjectDocument | string)[]
   modified: string
   id: number

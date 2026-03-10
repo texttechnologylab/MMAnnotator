@@ -1,14 +1,14 @@
 import { useForm } from "react-hook-form"
 import {
   Highlighter,
-  PopoverChildrentype,
+  type PopoverChildrentype,
   SelectionProvider,
   useSelections
 } from "react-selection-highlighter"
 import { Card, CardContent, CardHeader } from "./shadcn/ui/card"
 import { Button } from "./shadcn/ui/button"
 import { useEffect } from "react"
-import { CardTitle } from "react-bootstrap"
+import { CardTitle } from "./shadcn/ui/card"
 import { Label } from "./shadcn/ui/label"
 
 export interface Selection {

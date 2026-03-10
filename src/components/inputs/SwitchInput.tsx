@@ -1,4 +1,9 @@
-import { Control, Controller, FieldPath, FieldValues } from "react-hook-form"
+import {
+  type Control,
+  Controller,
+  type FieldPath,
+  type FieldValues
+} from "react-hook-form"
 import { Switch } from "../shadcn/ui/switch"
 
 export function SwitchInput<T extends FieldValues>({

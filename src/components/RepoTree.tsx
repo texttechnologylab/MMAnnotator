@@ -1,155 +1,98 @@
 import { useUser } from "@/zustand/useUser"
-import { Tree, TreeDataItem } from "./shadcn/ui/tree"
+import { Tree, type TreeDataItem } from "./shadcn/ui/tree"
 import { useEffect, useState } from "react"
 import {
-  ProjectDocument,
-  ProjectRepository,
-  ResourceProject,
+  type ProjectDocument,
+  type ProjectRepository,
   getProject
 } from "@/lib/resources/repository"
 import { Folder, FolderDot, Workflow } from "lucide-react"
 import { RepoContextMenuTree } from "./RepoContextMenuTree"
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getRepoStuff = (
-  parentId: string,
-  projects: ResourceProject[],
-  children: (ProjectRepository | ProjectDocument | string)[]
-) => {
-  const data: TreeDataItem[] = []
-
-  for (const item of children) {
-    if (typeof item === "string") {
-      const project = projects.find((p) => p.uri === item)
-      if (!project) continue
-      const treeDataItem = {
-        id: project.uri,
-        name: project.name,
-        type: "PROJECT" as const,
-        icon: FolderDot,
-        parent: parentId,
-        children: project.children
-          ? getRepoStuff(project.uri, projects, project.children)
-          : undefined
-      }
-      data.push(treeDataItem)
-      continue
-    }
-    if (item.type === "DOCUMENT") continue
-    const treeDataItem = {
-      id: item.uri,
-      name: item.name,
-      type: item.type,
-      parent: parentId,
-      children: item.children
-        ? getRepoStuff(item.uri, projects, item.children)
-        : undefined
-    }
-    data.push(treeDataItem)
-  }
-  return data.length > 0 ? data : undefined
-}
-
-const getRepoStuffProject = async (
-  parentId: string,
+/**
+ * Builds an array of tree items where each sub-project is a
+ * Promise<TreeDataItem> (loads independently), and repositories
+ * are synchronous TreeDataItem entries.
+ */
+const buildChildren = (
+  parent: TreeDataItem,
   session: string,
   children: (ProjectRepository | ProjectDocument | string)[]
-) => {
-  const promises: Promise<TreeDataItem | undefined>[] = []
+): (TreeDataItem | Promise<TreeDataItem>)[] => {
+  const items: (TreeDataItem | Promise<TreeDataItem>)[] = []
 
-  for (const item of children) {
-    if (typeof item === "string") {
-      const id = item.split("/").pop()
-
-      // eslint-disable-next-line no-async-promise-executor
-      const treeDataItem = (async () => {
+  for (const child of children) {
+    // Sub-project reference (string URI) → async load
+    if (typeof child === "string") {
+      const id = child.split("/").pop()
+      const promise = (async (): Promise<TreeDataItem> => {
         try {
           const project = await getProject(session, id || "")
-          if (!project.result) return
-          return {
+          if (!project.result) {
+            return {
+              id: "EMPTY_" + id,
+              name: `Empty Project ${id}`,
+              type: "PROJECT" as const,
+              icon: Workflow,
+              parent
+            }
+          }
+
+          const treeItem: TreeDataItem = {
             id: project.result.uri,
             name: project.result.name,
-            type: "PROJECT" as const,
-            icon: project.result.children ? FolderDot : Workflow,
-            parent: parentId,
-            children: project.result.children
-              ? await getRepoStuffProject(
-                  project.result.uri,
-                  session,
-                  project.result.children
-                )
-              : undefined
+            type: project.result.type,
+            icon: project.result.type == "PROJECT" ? FolderDot : Workflow,
+            parent
           }
+
+          treeItem.children =
+            project.result.type == "PROJECT"
+              ? buildChildren(treeItem, session, project.result.children)
+              : undefined
+          return treeItem
         } catch {
           return {
             id: "ERROR_" + id,
             name: `ERROR Loading Project ${id}`,
             type: "PROJECT" as const,
             icon: Workflow,
-            parent: parentId,
+            parent,
             children: undefined
           }
         }
       })()
-      promises.push(treeDataItem)
-
+      items.push(promise)
       continue
     }
-    if (item.type === "DOCUMENT") continue
-    const treeDataItem = {
-      id: item.uri,
-      name: item.name,
-      type: item.type,
-      parent: parentId,
-      children: item.children
-        ? await getRepoStuffProject(item.uri, session, item.children)
-        : undefined
+
+    // Skip documents
+    if (child.type === "DOCUMENT") continue
+
+    // Repository → synchronous
+    const treeItem: TreeDataItem = {
+      id: child.uri,
+      name: child.name,
+      type: child.type,
+      parent
     }
-    promises.push(Promise.resolve(treeDataItem))
+    treeItem.children = child.children
+      ? buildChildren(treeItem, session, child.children)
+      : undefined
+    items.push(treeItem)
   }
-  const data = (await Promise.all(promises)).filter((v) => v != undefined)
-  return data.length > 0 ? data : undefined
+
+  return items
 }
 const findItemInTree = (
   id: string,
-  data: TreeDataItem[]
+  data: (TreeDataItem | Promise<TreeDataItem>)[]
 ): TreeDataItem | undefined => {
   for (const item of data) {
-    if (item.id === id) {
-      return item
-    }
+    if (item instanceof Promise) continue
+    if (item.id === id) return item
     if (item.children) {
-      if (item.children instanceof Promise) {
-        continue
-      }
-      if (!item.children) continue
       const res = findItemInTree(id, item.children)
-      if (res) return res
-    }
-  }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const findItemInTreeAndUpdate = async (
-  id: string,
-  data: TreeDataItem[],
-  appendChild: TreeDataItem
-): Promise<TreeDataItem | undefined> => {
-  for (const item of data) {
-    if (item.id === id) {
-      if (item.children instanceof Promise) {
-        item.children = await item.children
-      }
-      if (!item.children) item.children = []
-      item.children.push(appendChild)
-      return item
-    }
-    if (item.children) {
-      if (item.children instanceof Promise) {
-        item.children = await item.children
-      }
-      if (!item.children) continue
-      const res = findItemInTreeAndUpdate(id, await item.children, appendChild)
       if (res) return res
     }
   }
@@ -163,50 +106,48 @@ export const RepoTree = ({
   onSelectChange: (item: TreeDataItem | undefined) => void
 }) => {
   const { session } = useUser()
-  const [treeData, setTreeData] = useState<TreeDataItem[]>([])
+  const [treeData, setTreeData] = useState<
+    (TreeDataItem | Promise<TreeDataItem>)[]
+  >([])
   const [selectedItem, setSelectedItem] = useState<TreeDataItem | undefined>()
-  useEffect(() => {
-    if (!session) return
-    updateTreeData("root", true)
-  }, [session, rootProject])
 
-  //FIXME: Please rewrite at some point
   const updateTreeData = async (repository: string, reset?: boolean) => {
     if (!session) return
-    let newTreeData: TreeDataItem[] = []
+    let newTreeData: (TreeDataItem | Promise<TreeDataItem>)[] = []
     if (!reset) newTreeData = [...treeData]
 
     const existingItem = findItemInTree(repository, newTreeData)
     if (existingItem) {
       if (existingItem.children === undefined) return
-      if (existingItem.children instanceof Promise) return
       if (existingItem.children.length > 0) return
     }
 
     if (reset) {
       const project = await getProject(session, rootProject)
       if (!project.result) return
-      const treeDataItem = {
+      const treeDataItem: TreeDataItem = {
         id: project.result.uri,
         name: project.result.name,
-        type: "PROJECT" as const,
-        icon: project.result.children ? FolderDot : Workflow,
-        children: project.result.children
-          ? getRepoStuffProject(
-              project.result.uri,
-              session,
-              project.result.children
-            )
-          : undefined
+        type: project.result.type,
+        icon: project.result.type == "PROJECT" ? FolderDot : Workflow
       }
-      console.log(treeDataItem)
+
+      treeDataItem.children =
+        project.result.type == "PROJECT"
+          ? buildChildren(treeDataItem, session, project.result.children)
+          : undefined
       newTreeData.push(treeDataItem)
     }
 
-    console.log(newTreeData)
     setTreeData(newTreeData)
     return newTreeData
   }
+
+  useEffect(() => {
+    if (!session) return
+    // eslint-disable-next-line
+    updateTreeData("root", true)
+  }, [session, rootProject])
 
   const treeItemSelect = (item: TreeDataItem | undefined) => {
     if (!item || !item.id) return
@@ -221,12 +162,12 @@ export const RepoTree = ({
   return (
     <RepoContextMenuTree
       targets={() => selectedItem?.id}
-      parent={selectedItem?.parent}
+      parent={selectedItem?.parent?.id}
       asChild
     >
       <Tree
         data={treeData}
-        className="flex-shrink-0 w-[100%] h-[60vh] border-[1px]"
+        className="w-full h-full border"
         onSelectChange={treeItemSelect}
         folderIcon={Folder}
         itemIcon={Workflow}

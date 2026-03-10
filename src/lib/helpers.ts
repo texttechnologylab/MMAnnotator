@@ -1,16 +1,16 @@
-import { UseFormGetValues, UseFormReset } from "react-hook-form"
-import { CASDocument, ToolEntry } from "../zustand/useDocument"
+import type { UseFormGetValues, UseFormReset } from "react-hook-form"
+import { CASDocument, type ToolEntry } from "../zustand/useDocument"
 
 export function projectStatusColor(status: string | null) {
   switch (status) {
     case "PREVIEW":
       return "warning"
     case "OPEN":
-      return "success"
+      return "green-700"
     case "CLOSED":
-      return "danger"
+      return "red-700"
     default:
-      return "secondary"
+      return "yellow-700"
   }
 }
 

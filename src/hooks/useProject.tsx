@@ -1,5 +1,5 @@
 import {
-  ResourceProject,
+  type ResourceProject,
   getProject,
   getProjects
 } from "@/lib/resources/repository"

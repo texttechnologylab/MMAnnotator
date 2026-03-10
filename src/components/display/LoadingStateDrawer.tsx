@@ -1,4 +1,4 @@
-import { LoadingStateData } from "@/zustand/useLoadingState"
+import type { LoadingStateData } from "@/zustand/useLoadingState"
 import {
   Drawer,
   DrawerContent,
