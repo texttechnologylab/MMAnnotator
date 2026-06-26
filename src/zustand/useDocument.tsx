@@ -411,8 +411,7 @@ export const useDocumentStore = create<DocumentStore>()(
             // alba prod
             //"ws://annotator.core.texttechnologylab.org/uima"
             const webSocket = new WebSocket(
-              window._env_?.BACKEND_URL ||
-                "wss://eval.textannotator.texttechnologylab.org/uima"
+              window._env_?.BACKEND_URL || "ws://localhost:4567/uima" //"wss://eval.textannotator.texttechnologylab.org/uima"
             )
             webSocket.onclose = (closeEvent) => {
               console.log(
@@ -450,7 +449,7 @@ export const useDocumentStore = create<DocumentStore>()(
             webSocket.onerror = (err) => {
               toast.error("Web Service", {
                 description:
-                  "An error occured. If issues persist please refresh the Page (F5).",
+                  "An error occured. If issues persist please refresh the Page (F5). ",
                 closeButton: true,
                 duration: Infinity
               })

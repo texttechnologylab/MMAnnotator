@@ -1,15 +1,22 @@
 import { getCookie } from "../helpers"
+import {
+  RESOURCE_MANAGER_URL,
+  AUTHORITY_MANAGER_URL,
+  ANNO_SERVICE_URL,
+  SERVICES_URL,
+  ANNO_API_URL
+} from "../constants"
 import { CASDocument, type ICASDocument } from "../../zustand/useDocument"
 import { useContext } from "react"
 import { WebSocketContext } from "@/components/wrappers/WebSocketProvider"
 
 export const useANNO = () => {
   const annoservice = "textannotator.texttechnologylab.org"
-  const annoServiceURL = "http://" + annoservice
-  const resourceManagerURL = "https://resources.hucompute.org"
-  const authorityManagerURL = "https://authority.hucompute.org"
-  const servicesURL = "http://services.hucompute.org"
-  const apiServices = "http://api.textannotator.texttechnologylab.org"
+  const annoServiceURL = ANNO_SERVICE_URL
+  const resourceManagerURL = RESOURCE_MANAGER_URL
+  const authorityManagerURL = AUTHORITY_MANAGER_URL
+  const servicesURL = SERVICES_URL
+  const apiServices = ANNO_API_URL
 
   const { annoSocketPromise } = useContext(WebSocketContext)
 
@@ -825,7 +832,7 @@ export const useANNO = () => {
 
     function getTTLabSynset(name: string, callback: CallbackFunction) {
 
-        let url = "https://textimager.hucompute.org/VSD/getSenses?verb=";
+        let url = `${TEXTIMAGER_URL}/VSD/getSenses?verb=`;
 
         $.ajax({
             url: url + name,
@@ -844,7 +851,7 @@ export const useANNO = () => {
 
     function getTTLabSynsetID(id: string, callback: CallbackFunction) {
 
-        let url = "https://textimager.hucompute.org/VSD/sense/" + id;
+        let url = `${TEXTIMAGER_URL}/VSD/sense/` + id;
         //FIXME:
         $.ajax({
             url: url + name,

@@ -63,6 +63,10 @@ export function getRawToolElements(
   return Object.values(elements)
 }
 
+export function findToolElementByKey(elements: ToolEntry[], key: string) {
+  return elements.find((element) => element.features.key === key)
+}
+
 /*
  END: DOCUMENT STUFF
 */

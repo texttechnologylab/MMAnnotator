@@ -1,14 +1,22 @@
 import { NumberInput } from "@/components/inputs/CustomInput"
-import { InputLabel } from "@/components/inputs/common"
 import { SwitchInput } from "@/components/inputs/SwitchInput"
 import { Button } from "@/components/shadcn/ui/button"
-import { CardContent, CardHeader, CardTitle } from "@/components/shadcn/ui/card"
+import { CardContent } from "@/components/shadcn/ui/card"
 import { DataTable } from "@/components/shadcn/ui/data-table"
 import { DataTableContent } from "@/components/shadcn/ui/data-table-content"
 import { DataTablePagination } from "@/components/shadcn/ui/data-table-pagination"
-import { DialogContent, DialogTrigger } from "@/components/shadcn/ui/dialog"
+import { DataTableProgress } from "@/components/shadcn/ui/data-table-progress"
+import {
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/shadcn/ui/dialog"
 import { Form } from "@/components/shadcn/ui/form"
-import { LoadingState } from "@/components/shadcn/ui/loading-button"
+import {
+  LoadingButton,
+  LoadingState
+} from "@/components/shadcn/ui/loading-button"
 import { useANNO } from "@/lib/annotator/AnnoLib"
 import type { DocumentData } from "@/lib/resources/repository"
 import { useDocumentStore } from "@/zustand/useDocument"
@@ -19,6 +27,7 @@ import { useForm } from "react-hook-form"
 import * as pako from "pako"
 import { fileColumns } from "./columns"
 import type { FileData, UploadFormData } from "./types"
+import { Input } from "../shadcn/ui/input"
 
 interface UploadFilesDialogProps {
   documentTableData: DocumentData[]
@@ -44,7 +53,11 @@ export const UploadFilesDialog = ({
     form.setValue("repository", repositoryId)
   }, [repositoryId, form])
 
-  const { control, handleSubmit } = form
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting }
+  } = form
 
   const [tableData, setTableData] = useState<FileData[]>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -88,13 +101,17 @@ export const UploadFilesDialog = ({
   }
 
   const uploadFiles = async (data: UploadFormData) => {
-    for (let i = 0; i < tableData.length; i++) {
-      const file = tableData[i]
+    const files = [...tableData]
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
       if (file.progress !== LoadingState.NEUTRAL) continue
 
-      const updated = [...tableData]
-      updated[i] = { ...updated[i], progress: LoadingState.LOADING }
-      setTableData(updated)
+      setTableData((prev) =>
+        prev.map((f, j) =>
+          j === i ? { ...f, progress: LoadingState.LOADING } : f
+        )
+      )
 
       const reader = new FileReader()
       if (file.type === "application/x-gzip") {
@@ -123,9 +140,12 @@ export const UploadFilesDialog = ({
       }
 
       await new Promise((resolve) => {
-        subscribeToWebSocket(
+        const unsubscribe = subscribeToWebSocket(
           "create_db_cas_fast",
-          () => resolve(true),
+          () => {
+            unsubscribe()
+            resolve(true)
+          },
           "create_db" + file.name
         )
       })
@@ -138,15 +158,19 @@ export const UploadFilesDialog = ({
     }
   }
 
+  const completedUploads = tableData.filter(
+    (file) => file.progress === LoadingState.SUCCESS
+  ).length
+
   return (
     <Dialog>
       <DialogTrigger asChild className="float-right">
         <Button>Upload Files</Button>
       </DialogTrigger>
-      <DialogContent>
-        <CardHeader>
-          <CardTitle>Upload</CardTitle>
-        </CardHeader>
+      <DialogContent className="sm:max-w-[60vw]">
+        <DialogHeader>
+          <DialogTitle>Upload</DialogTitle>
+        </DialogHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={handleSubmit(uploadFiles)}>
@@ -155,9 +179,19 @@ export const UploadFilesDialog = ({
                 name="repository"
                 label={"Repository/Project ID"}
               />
-              <input type="file" multiple onChange={onFileChange} />
-              <InputLabel label="Allow Duplicates" />
-              <SwitchInput control={control} name="duplicates" />
+              <Input
+                type="file"
+                multiple
+                onChange={onFileChange}
+                accept=".xmi,.xmi.gz"
+                className="mt-1 cursor-pointer"
+              />
+              <div className="mt-3 flex items-center gap-2">
+                <label className="text-sm font-medium leading-none">
+                  Allow Duplicates
+                </label>
+                <SwitchInput control={control} name="duplicates" />
+              </div>
               <span>
                 <DataTable
                   columns={fileColumns}
@@ -165,15 +199,28 @@ export const UploadFilesDialog = ({
                   columnVisibility={columnVisibility}
                   setColumnVisibility={setColumnVisibility}
                 >
-                  <div className="max-h-[300px] overflow-scroll">
+                  <div className="max-h-75 overflow-scroll">
                     <DataTableContent />
                   </div>
+                  <DataTableProgress
+                    total={tableData.length}
+                    completed={completedUploads}
+                    label="Overall upload progress"
+                  />
                   <DataTablePagination
                     pageSizes={[10, 20, 30, 50, 100, 200, 500, 1000]}
                   />
                 </DataTable>
               </span>
-              <Button type="submit">Upload</Button>
+
+              <LoadingButton
+                type="submit"
+                loading={
+                  isSubmitting ? LoadingState.LOADING : LoadingState.NEUTRAL
+                }
+              >
+                Upload
+              </LoadingButton>
             </form>
           </Form>
         </CardContent>

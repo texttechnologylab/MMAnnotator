@@ -95,7 +95,7 @@ export const RagBot = ({
     string,
     { label: string; values: string[] | number[] }
   >
-  casTextOrder?: any
+  casTextOrder?: any[]
   promptType: string
 }) => {
   const baseRecommendedModel = "ollama/qwen3:8b-q4_K_M"
@@ -505,7 +505,7 @@ export const RagBot = ({
                   <div className={"ml-auto mt-4 flex justify-end gap-2"}>
                     <div>
                       <Textarea
-                        className="w-[500px]"
+                        className="w-125"
                         spellCheck
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && e.shiftKey) {

@@ -1,8 +1,6 @@
 import { type ReactNode, useEffect, useState } from "react"
 import { ComboboxInputMult } from "./inputs/ComboBoxInput"
 import { SelectInput } from "./inputs/SelectInput"
-import { InputLabel } from "./inputs/common"
-import { Button } from "./shadcn/ui/button"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -29,15 +27,16 @@ import {
   getAccessPermissionsForTargets,
   getListGroupsCombo,
   getListUsersCombo,
-  setAccessPermissionsForTargets,
-  targetsToTargetString
+  setAccessPermissionsForTargets
 } from "@/lib/resources/permissions"
-import { deleteItem, deleteRepository } from "@/lib/resources/repository"
+import { deleteItem, type ResourceTargetUri } from "@/lib/resources/repository"
 import { DataTable } from "./shadcn/ui/data-table"
 import { DataTableContent } from "./shadcn/ui/data-table-content"
 import { toast } from "sonner"
 import { chunkArray } from "@/lib/helpers"
 import { CheckBoxInput } from "./inputs/CheckBoxInput"
+import { LoadingButton, LoadingState } from "./shadcn/ui/loading-button"
+import { useLoadingAction } from "../hooks/useLoadingAction"
 
 const accessColumns = [
   {
@@ -57,8 +56,8 @@ export const RepoContextMenu = ({
   children
 }: {
   asChild?: boolean
-  targets?: string[]
-  parent?: string
+  targets?: ResourceTargetUri[]
+  parent?: ResourceTargetUri
   children?: ReactNode
 }) => {
   const { session } = useUser()
@@ -106,19 +105,18 @@ export const RepoContextMenu = ({
   const onDelete = async () => {
     if (!session || !parent) return
     if (!targets || targets?.length == 0) return
-    const targetsString = targetsToTargetString(targets)
-    let response = null
-    if (targetsString.includes("document"))
-      response = await deleteItem(session, targetsString, parent)
-    else response = await deleteRepository(session, targetsString, parent)
+
+    const response = await deleteItem(session, targets, parent)
     if (response.success) toast.success("Item deleted successfully")
     else toast.error("Failed to delete item")
   }
 
+  const { run: runDelete, loading: deleteLoading } = useLoadingAction(onDelete)
+
   const onPermissionSubmit = async (data: PermissionForm) => {
     if (!session) return
     if (!targets || targets?.length == 0) return
-    let chunks: string[][] = []
+    let chunks: ResourceTargetUri[][] = []
 
     if (data.spreadEvenly) {
       chunks = chunkArray(targets, targets.length / data.user.length)
@@ -151,17 +149,19 @@ export const RepoContextMenu = ({
       <ContextMenu>
         <ContextMenuTrigger asChild={asChild}>{children}</ContextMenuTrigger>
         <ContextMenuContent>
-          <DialogTrigger>
+          <DialogTrigger asChild>
             <ContextMenuItem onClick={() => setSelectedTab("permissions")}>
               Update Permissions
             </ContextMenuItem>
+          </DialogTrigger>
+          <DialogTrigger asChild>
             <ContextMenuItem onClick={() => setSelectedTab("delete")}>
               Delete
             </ContextMenuItem>
           </DialogTrigger>
         </ContextMenuContent>
       </ContextMenu>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[60vw]">
         <DialogHeader>
           <DialogTitle>Update permissions</DialogTitle>
           <DialogDescription></DialogDescription>
@@ -208,15 +208,19 @@ export const RepoContextMenu = ({
                       />
                     </div>
                     <div className="flex items-center space-x-2 mt-5">
-                      <InputLabel label="Recursive" />
+                      <label className="text-sm font-medium leading-none">
+                        Recursive
+                      </label>
                       <CheckBoxInput
                         control={permissionForm.control}
                         name="recursive"
                       />
-                      <InputLabel
-                        label="Spread Evenly"
-                        description="Divides the documents selected equally (or as close as possible) among the users selected in the dropdown."
-                      />
+                      <label
+                        className="text-sm font-medium leading-none"
+                        title="Divides the documents selected equally (or as close as possible) among the users selected in the dropdown."
+                      >
+                        Spread Evenly
+                      </label>
                       <CheckBoxInput
                         control={permissionForm.control}
                         name="spreadEvenly"
@@ -237,7 +241,16 @@ export const RepoContextMenu = ({
                   </DataTable>
                 </div>
                 <DialogFooter>
-                  <Button type="submit">Save changes</Button>
+                  <LoadingButton
+                    type="submit"
+                    loading={
+                      permissionForm.formState.isSubmitting
+                        ? LoadingState.LOADING
+                        : LoadingState.NEUTRAL
+                    }
+                  >
+                    Save changes
+                  </LoadingButton>
                 </DialogFooter>
               </form>
             </Form>
@@ -250,9 +263,13 @@ export const RepoContextMenu = ({
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={() => onDelete()} type="button">
+                <LoadingButton
+                  onClick={() => void runDelete()}
+                  type="button"
+                  loading={deleteLoading}
+                >
                   Delete items
-                </Button>
+                </LoadingButton>
               </DialogFooter>
             </form>
           </TabsContent>

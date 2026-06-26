@@ -1,5 +1,6 @@
 import { toast } from "sonner"
 import { getCookie, setCookie } from "../helpers"
+import { AUTHORITY_MANAGER_URL } from "../constants"
 
 export async function loginPublic(
   userName: string,
@@ -8,7 +9,7 @@ export async function loginPublic(
   const params = new URLSearchParams()
   params.set("username", userName)
   params.set("password", password)
-  const response = await fetch("https://authority.hucompute.org" + "/login", {
+  const response = await fetch(AUTHORITY_MANAGER_URL + "/login", {
     //TODO: await fetch(useANNO().getAuthorityManagerURL() + '/login', {
     method: "POST",
     body: params
@@ -63,9 +64,7 @@ function generateRandomString(length: number) {
 
 export async function checkLogin(): Promise<boolean> {
   const response = await fetch(
-    `https://authority.hucompute.org/checklogin?session=${getCookie(
-      "session"
-    )}`,
+    `${AUTHORITY_MANAGER_URL}/checklogin?session=${getCookie("session")}`,
     {
       method: "GET"
     }

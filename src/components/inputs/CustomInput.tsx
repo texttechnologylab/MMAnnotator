@@ -41,6 +41,7 @@ export function NumberInput<T extends FieldValues>({
           <FormControl>
             <Input
               {...field}
+              value={field.value}
               type="number"
               className="form-input mt-2"
               disabled={disabled}

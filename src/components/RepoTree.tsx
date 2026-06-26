@@ -4,7 +4,9 @@ import { useEffect, useState } from "react"
 import {
   type ProjectDocument,
   type ProjectRepository,
-  getProject
+  getProject,
+  isResourceTargetUri,
+  type ResourceTargetUri
 } from "@/lib/resources/repository"
 import { Folder, FolderDot, Workflow } from "lucide-react"
 import { RepoContextMenuTree } from "./RepoContextMenuTree"
@@ -30,7 +32,7 @@ const buildChildren = (
           const project = await getProject(session, id || "")
           if (!project.result) {
             return {
-              id: "EMPTY_" + id,
+              id: `URL/resource/project/${id + "EMPTY"}`,
               name: `Empty Project ${id}`,
               type: "PROJECT" as const,
               icon: Workflow,
@@ -53,7 +55,7 @@ const buildChildren = (
           return treeItem
         } catch {
           return {
-            id: "ERROR_" + id,
+            id: `URL/resource/repository/${id + "ERROR"}`,
             name: `ERROR Loading Project ${id}`,
             type: "PROJECT" as const,
             icon: Workflow,
@@ -98,11 +100,74 @@ const findItemInTree = (
   }
 }
 
+const insertTreeChild = (
+  data: (TreeDataItem | Promise<TreeDataItem>)[],
+  parentId: ResourceTargetUri,
+  node: {
+    id: ResourceTargetUri
+    name: string
+    type: "REPOSITORY" | "PROJECT"
+  }
+): (TreeDataItem | Promise<TreeDataItem>)[] => {
+  return data.map((item) => {
+    if (item instanceof Promise) return item
+
+    if (item.id === parentId) {
+      const children = item.children ? [...item.children] : []
+      const alreadyExists = children.some(
+        (child) => !(child instanceof Promise) && child.id === node.id
+      )
+      if (alreadyExists) return item
+
+      return {
+        ...item,
+        children: [
+          ...children,
+          {
+            id: node.id,
+            name: node.name,
+            type: node.type,
+            parent: item,
+            icon: node.type === "PROJECT" ? FolderDot : Workflow,
+            children: node.type === "PROJECT" ? [] : undefined
+          }
+        ]
+      }
+    }
+
+    if (!item.children) return item
+
+    return {
+      ...item,
+      children: insertTreeChild(item.children, parentId, node)
+    }
+  })
+}
+
+const removeTreeNode = (
+  data: (TreeDataItem | Promise<TreeDataItem>)[],
+  nodeId: ResourceTargetUri
+): (TreeDataItem | Promise<TreeDataItem>)[] => {
+  return data
+    .filter((item) => item instanceof Promise || item.id !== nodeId)
+    .map((item) => {
+      if (item instanceof Promise) return item
+      if (!item.children) return item
+
+      return {
+        ...item,
+        children: removeTreeNode(item.children, nodeId)
+      }
+    })
+}
+
 export const RepoTree = ({
   rootProject,
+  onLoadingChange,
   onSelectChange
 }: {
   rootProject: string
+  onLoadingChange?: (isLoading: boolean) => void
   onSelectChange: (item: TreeDataItem | undefined) => void
 }) => {
   const { session } = useUser()
@@ -113,39 +178,44 @@ export const RepoTree = ({
 
   const updateTreeData = async (repository: string, reset?: boolean) => {
     if (!session) return
-    let newTreeData: (TreeDataItem | Promise<TreeDataItem>)[] = []
-    if (!reset) newTreeData = [...treeData]
 
-    const existingItem = findItemInTree(repository, newTreeData)
-    if (existingItem) {
-      if (existingItem.children === undefined) return
-      if (existingItem.children.length > 0) return
-    }
+    onLoadingChange?.(true)
+    try {
+      let newTreeData: (TreeDataItem | Promise<TreeDataItem>)[] = []
+      if (!reset) newTreeData = [...treeData]
 
-    if (reset) {
-      const project = await getProject(session, rootProject)
-      if (!project.result) return
-      const treeDataItem: TreeDataItem = {
-        id: project.result.uri,
-        name: project.result.name,
-        type: project.result.type,
-        icon: project.result.type == "PROJECT" ? FolderDot : Workflow
+      const existingItem = findItemInTree(repository, newTreeData)
+      if (existingItem) {
+        if (existingItem.children === undefined) return
+        if (existingItem.children.length > 0) return
       }
 
-      treeDataItem.children =
-        project.result.type == "PROJECT"
-          ? buildChildren(treeDataItem, session, project.result.children)
-          : undefined
-      newTreeData.push(treeDataItem)
-    }
+      if (reset) {
+        const project = await getProject(session, rootProject)
+        if (!project.result) return
+        const treeDataItem: TreeDataItem = {
+          id: project.result.uri,
+          name: project.result.name,
+          type: project.result.type,
+          icon: project.result.type == "PROJECT" ? FolderDot : Workflow
+        }
 
-    setTreeData(newTreeData)
-    return newTreeData
+        treeDataItem.children =
+          project.result.type == "PROJECT"
+            ? buildChildren(treeDataItem, session, project.result.children)
+            : undefined
+        newTreeData.push(treeDataItem)
+      }
+
+      setTreeData(newTreeData)
+      return newTreeData
+    } finally {
+      onLoadingChange?.(false)
+    }
   }
 
   useEffect(() => {
     if (!session) return
-    // eslint-disable-next-line
     updateTreeData("root", true)
   }, [session, rootProject])
 
@@ -159,10 +229,52 @@ export const RepoTree = ({
     onSelectChange(item)
   }
 
+  const handleNodeCreated = (node: {
+    id: ResourceTargetUri
+    name: string
+    type: "REPOSITORY" | "PROJECT"
+    parentId: ResourceTargetUri
+  }) => {
+    setTreeData((prev) =>
+      insertTreeChild(prev, node.parentId, {
+        id: node.id,
+        name: node.name,
+        type: node.type
+      })
+    )
+  }
+
+  const handleNodeDeleted = (nodeId: ResourceTargetUri) => {
+    setTreeData((prev) => removeTreeNode(prev, nodeId))
+
+    if (selectedItem?.id === nodeId) {
+      setSelectedItem(undefined)
+      onSelectChange(undefined)
+    }
+  }
+
+  const handleTreeRefreshRequested = () => {
+    void updateTreeData("root", true)
+  }
+
+  const handleNodeRefreshRequested = async (nodeId: ResourceTargetUri) => {
+    void nodeId
+    await updateTreeData("root", true)
+  }
+
   return (
     <RepoContextMenuTree
-      targets={() => selectedItem?.id}
+      targets={() => {
+        if (!selectedItem?.id) return undefined
+        return isResourceTargetUri(selectedItem.id)
+          ? selectedItem.id
+          : undefined
+      }}
       parent={selectedItem?.parent?.id}
+      onNodeCreated={handleNodeCreated}
+      onNodeDeleted={handleNodeDeleted}
+      onNodeRefreshRequested={handleNodeRefreshRequested}
+      onTreeRefreshRequested={handleTreeRefreshRequested}
       asChild
     >
       <Tree

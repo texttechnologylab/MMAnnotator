@@ -3,6 +3,7 @@ import { CardContent, CardHeader, CardTitle } from "@/components/shadcn/ui/card"
 import { DataTable } from "@/components/shadcn/ui/data-table"
 import { DataTableContent } from "@/components/shadcn/ui/data-table-content"
 import { DataTablePagination } from "@/components/shadcn/ui/data-table-pagination"
+import { DataTableProgress } from "@/components/shadcn/ui/data-table-progress"
 import { DialogContent, DialogTrigger } from "@/components/shadcn/ui/dialog"
 import {
   LoadingButton,
@@ -22,7 +23,7 @@ interface ValidateFilesDialogProps {
 }
 
 export const ValidateFilesDialog = ({ tableRef }: ValidateFilesDialogProps) => {
-  const { subscribeToWebSocket, clearListeners, getById } = useDocumentStore()
+  const { subscribeToWebSocket, getById } = useDocumentStore()
   const { openCASDocument, closeCASDocument } = useANNO()
 
   const [validDocuments, setValidDocuments] = useState<DocumentDataValid[]>([])
@@ -39,32 +40,43 @@ export const ValidateFilesDialog = ({ tableRef }: ValidateFilesDialogProps) => {
 
   const validateDocuments = async () => {
     let errorOccurred = false
-    let tableData = validDocuments
+    const documents = [...validDocuments]
     setValidateRunning(LoadingState.LOADING)
 
-    for (let i = 0; i < tableData.length; i++) {
-      const document = tableData[i]
+    for (let i = 0; i < documents.length; i++) {
+      const document = documents[i]
       const id = document.uri.split("/").pop()!
       openCASDocument(id)
-      tableData = tableData.map((d, j) =>
-        j === i ? { ...d, valid: LoadingState.LOADING } : d
+
+      setValidDocuments((prev) =>
+        prev.map((d, j) =>
+          j === i ? { ...d, valid: LoadingState.LOADING } : d
+        )
       )
-      setValidDocuments(tableData)
 
       const success = await new Promise((resolve) => {
-        subscribeToWebSocket(
+        const group = "open_cas_test" + document.uri
+
+        const unsubscribeOpen = subscribeToWebSocket(
           "open_cas",
-          () => resolve(true),
-          "open_cas_test" + document.uri
+          () => {
+            unsubscribeOpen()
+            unsubscribeMsg()
+            resolve(true)
+          },
+          group
         )
-        subscribeToWebSocket(
+
+        const unsubscribeMsg = subscribeToWebSocket(
           "msg",
-          () => resolve(false),
-          "open_cas_test" + document.uri
+          () => {
+            unsubscribeOpen()
+            unsubscribeMsg()
+            resolve(false)
+          },
+          group
         )
       })
-
-      clearListeners("open_cas_test" + document.uri)
 
       if (success) {
         const doc = getById(id)
@@ -74,18 +86,28 @@ export const ValidateFilesDialog = ({ tableRef }: ValidateFilesDialogProps) => {
         errorOccurred = true
       }
 
-      tableData = tableData.map((d, j) =>
-        j === i
-          ? { ...d, valid: success ? LoadingState.SUCCESS : LoadingState.ERROR }
-          : d
+      setValidDocuments((prev) =>
+        prev.map((d, j) =>
+          j === i
+            ? {
+                ...d,
+                valid: success ? LoadingState.SUCCESS : LoadingState.ERROR
+              }
+            : d
+        )
       )
-      setValidDocuments(tableData)
     }
 
     setValidateRunning(
       errorOccurred ? LoadingState.ERROR : LoadingState.SUCCESS
     )
   }
+
+  const completedValidations = validDocuments.filter(
+    (document) =>
+      document.valid === LoadingState.SUCCESS ||
+      document.valid === LoadingState.ERROR
+  ).length
 
   return (
     <Dialog>
@@ -94,7 +116,7 @@ export const ValidateFilesDialog = ({ tableRef }: ValidateFilesDialogProps) => {
           Validate Files
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[60vw]">
         <CardHeader>
           <CardTitle>Validate Files</CardTitle>
         </CardHeader>
@@ -104,6 +126,11 @@ export const ValidateFilesDialog = ({ tableRef }: ValidateFilesDialogProps) => {
               <div className="h-[90%] overflow-scroll">
                 <DataTableContent />
               </div>
+              <DataTableProgress
+                className="mt-2"
+                total={validDocuments.length}
+                completed={completedValidations}
+              />
               <div className="h-[10%] mt-3">
                 <DataTablePagination
                   pageSizes={[10, 20, 30, 50, 100, 200, 500, 1000]}
@@ -111,6 +138,7 @@ export const ValidateFilesDialog = ({ tableRef }: ValidateFilesDialogProps) => {
               </div>
             </DataTable>
           </div>
+
           <LoadingButton onClick={validateDocuments} loading={validateRunning}>
             Validate
           </LoadingButton>

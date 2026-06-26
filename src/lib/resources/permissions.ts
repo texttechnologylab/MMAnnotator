@@ -1,4 +1,6 @@
 import { chunkArray } from "../helpers"
+import { AUTHORITY_MANAGER_URL } from "../constants"
+import type { ResourceTargetUri } from "./repository"
 
 export const setAccessPermissions = (
   session: string,
@@ -7,8 +9,15 @@ export const setAccessPermissions = (
   level: string,
   recursive: boolean
 ): Promise<{ success: boolean }> => {
+  const urlSearchParams = new URLSearchParams()
+  urlSearchParams.append("session", session)
+  urlSearchParams.append("target", target)
+  urlSearchParams.append("authority", authority)
+  urlSearchParams.append("level", level)
+  urlSearchParams.append("recursive", String(recursive))
+
   return fetch(
-    `https://authority.hucompute.org/setaccesspermission?session=${session}&target=${target}&authority=${authority}&level=${level}&recursive=${recursive}`,
+    `${AUTHORITY_MANAGER_URL}/setaccesspermission?${urlSearchParams.toString()}`,
     {
       method: "POST"
     }
@@ -17,7 +26,7 @@ export const setAccessPermissions = (
 
 export const setAccessPermissionsForTargets = async (
   session: string,
-  targets: string[],
+  targets: ResourceTargetUri[],
   authority: string,
   level: string,
   recursive: boolean,
@@ -40,7 +49,7 @@ export const setAccessPermissionsForTargets = async (
   res.every((entry) => entry.success)
   return { success: true }
 }
-//https://authority.hucompute.org/listuserscombo
+//${AUTHORITY_MANAGER_URL}/listuserscombo
 
 export interface UserCombo {
   affiliation: string
@@ -56,7 +65,7 @@ export const getListUsersCombo = (
   limit: string
 ): Promise<UserCombo[]> => {
   return fetch(
-    `https://authority.hucompute.org/listuserscombo?session=${session}&page=${page}&start=${start}&limit=${limit}`,
+    `${AUTHORITY_MANAGER_URL}/listuserscombo?session=${session}&page=${page}&start=${start}&limit=${limit}`,
     {
       method: "POST"
     }
@@ -81,7 +90,7 @@ export const getListGroupsCombo = (
   limit: string
 ): Promise<GroupCombo[]> => {
   return fetch(
-    `https://authority.hucompute.org/listgroupscombo?session=${session}&page=${page}&start=${start}&limit=${limit}`,
+    `${AUTHORITY_MANAGER_URL}/listgroupscombo?session=${session}&page=${page}&start=${start}&limit=${limit}`,
     {
       method: "POST"
     }
@@ -102,13 +111,9 @@ export interface AccessResponse {
   access: AccessPermission[]
 }
 
-export const targetsToTargetString = (targets: string[]): string => {
-  return JSON.stringify(targets)
-}
-
 export const getListAccessPermissions = (
   session: string,
-  target: string,
+  target: ResourceTargetUri | string,
   type: "USER" | "GROUP",
   page: string,
   start: string,
@@ -122,7 +127,7 @@ export const getListAccessPermissions = (
   urlSearchParams.append("start", start)
   urlSearchParams.append("limit", limit)
   return fetch(
-    `https://authority.hucompute.org/listaccesspermissions?${urlSearchParams.toString()}`,
+    `${AUTHORITY_MANAGER_URL}/listaccesspermissions?${urlSearchParams.toString()}`,
     {
       method: "POST"
     }
@@ -131,7 +136,7 @@ export const getListAccessPermissions = (
 
 export const getAccessPermissionsForTargets = async (
   session: string,
-  targets: string[],
+  targets: ResourceTargetUri[],
   type: "USER" | "GROUP",
   chunkSize: number = 50
 ): Promise<AccessPermission[]> => {

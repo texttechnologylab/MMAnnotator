@@ -1,24 +1,38 @@
 # Configuration
 
-## Environment Variables
+## Runtime environment
 
-The app connects to a TextAnnotator backend via WebSocket. Configure the backend URL through Vite environment variables or the Docker entrypoint.
+Backend endpoints are read at runtime from the global `window._env_` object, so a
+single build can be deployed against different backends. When a value is missing,
+the fallbacks in [`src/lib/constants.ts`](https://github.com/texttechnologylab/MMAnnotator/blob/master/src/lib/constants.ts)
+are used.
 
-<!-- TODO: Document specific env vars once stabilized -->
+| Variable      | Used by                           | Purpose                               |
+| ------------- | --------------------------------- | ------------------------------------- |
+| `BACKEND_URL` | `zustand/useDocument` (WebSocket) | TextAnnotator UIMA service (`…/uima`) |
+| `UCE_URL`     | `App.tsx` (RAG Bot routing)       | UCE host serving the RAG Bot          |
 
-## Vite Config
+In Docker, `window._env_` is generated at container start by
+[`docker-entrypoint.sh`](../deployment/docker.md), which writes the environment
+variables into a `config.js` file served alongside the app.
 
-The Vite configuration lives in `vite.config.ts` and includes:
+## Service endpoints
 
-- `@vitejs/plugin-react` for React/JSX support
-- `@tailwindcss/vite` for Tailwind CSS v4 integration
+The remaining backend services are configured in `src/lib/constants.ts`:
 
-## Path Aliases
+| Constant                | Service                                  |
+| ----------------------- | ---------------------------------------- |
+| `RESOURCE_MANAGER_URL`  | Projects, repositories, documents        |
+| `AUTHORITY_MANAGER_URL` | Login, users, groups, access permissions |
+| `ANNO_SERVICE_URL`      | Annotation service                       |
+| `ANNO_API_URL`          | Annotation REST API                      |
+| `SERVICES_URL`          | Auxiliary services                       |
+| `TEXTIMAGER_URL`        | TextImager                               |
+| `DEFAULT_UCE_URL`       | Default UCE host (RAG Bot)               |
 
-TypeScript path aliases are configured in `tsconfig.json`:
+## Build configuration
 
-| Alias | Path    |
-| ----- | ------- |
-| `@/*` | `src/*` |
-
-This allows imports like `@/components/shadcn/ui/button` instead of relative paths.
+- **Vite** ([`vite.config.ts`](https://github.com/texttechnologylab/MMAnnotator/blob/master/vite.config.ts)) —
+  `@vitejs/plugin-react`, `@tailwindcss/vite`, and manual chunking of heavy
+  dependencies (icons, charts, Radix, tables, virtualisation).
+- **Path alias** — `@/*` resolves to `src/*`.

@@ -10,9 +10,18 @@ import {
   CardTitle
 } from "@/components/shadcn/ui/card"
 import { cn } from "@/lib/utils"
+import { useUser } from "@/zustand/useUser"
+import { useEffect } from "react"
 
 export default function ProjectsPage() {
-  const { projectList, setCurrentProject } = useProjectStore()
+  const { session } = useUser()
+  const { projectList, setCurrentProject, fetchProjects } = useProjectStore()
+
+  useEffect(() => {
+    if (session) {
+      fetchProjects(session, 0)
+    }
+  }, [session, fetchProjects])
 
   const navigate = useNavigate()
 
@@ -20,6 +29,7 @@ export default function ProjectsPage() {
     <div className="container mx-auto px-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {projectList.map((task, index) => {
+          if (!task.status) return
           return (
             <Card key={"projects-big-list-" + index}>
               <CardHeader>
@@ -39,7 +49,7 @@ export default function ProjectsPage() {
                 <Button
                   onClick={() => {
                     setCurrentProject(task)
-                    navigate(`/${task.url}`)
+                    navigate(`${task.id}`)
                   }}
                 >
                   Select

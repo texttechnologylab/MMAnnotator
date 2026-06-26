@@ -13,9 +13,10 @@ import {
   type DropResult
 } from "@hello-pangea/dnd"
 import { Spinner } from "./spinner"
+import type { ResourceTargetUri } from "@/lib/resources/repository"
 
 interface TreeDataItem {
-  id: string
+  id: ResourceTargetUri
   name: string
   type: "PROJECT" | "REPOSITORY" | "DOCUMENT"
   icon?: LucideIcon
@@ -41,7 +42,8 @@ const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
       expandAll,
       folderIcon,
       itemIcon,
-      className
+      className,
+      ...props
     },
     ref
   ) => {
@@ -103,6 +105,16 @@ const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
     }, [data, expandAll, initialSlelectedItemId])
 
     const refRoot = useRef<HTMLDivElement>(null)
+    const mergedRef = React.useCallback(
+      (node: HTMLDivElement | null) => {
+        ;(refRoot as React.MutableRefObject<HTMLDivElement | null>).current =
+          node
+        if (typeof ref === "function") ref(node)
+        else if (ref)
+          (ref as React.MutableRefObject<HTMLDivElement | null>).current = node
+      },
+      [ref]
+    )
     const { width, height } = useResizeObserver({
       ref: refRoot as React.RefObject<HTMLElement>
     })
@@ -115,13 +127,16 @@ const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
     }
 
     return (
-      <div ref={refRoot} className={cn("overflow-hidden", className)}>
+      <div
+        ref={mergedRef}
+        className={cn("overflow-hidden", className)}
+        {...props}
+      >
         <ScrollArea style={{ width, height }}>
           <div className="relative p-2">
             <DragDropContext onDragEnd={onDragEnd}>
               <TreeItem
                 data={data}
-                ref={ref}
                 selectedItemId={selectedItemId}
                 handleSelectChange={handleSelectChange}
                 expandedItemIds={expandedItemIds}
@@ -163,7 +178,7 @@ const TreeNodeContent = ({
   index,
   totalSiblings
 }: TreeNodeContentProps) => {
-  if (item.children && item.type == "PROJECT") {
+  if (item.children) {
     return (
       <Draggable
         key={item.id}
