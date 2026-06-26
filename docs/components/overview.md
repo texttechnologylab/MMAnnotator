@@ -32,7 +32,7 @@ Form field components built on top of `react-hook-form` and shadcn:
 
 ### Key Components
 
-- `NavBar` — Top navigation bar with side panel menu
+- `NavBar` — Top navigation bar with project switcher, progress and theme toggle
 - `RagBot` — AI chat assistant with resizable overlay panel
 - `RepoTree` — Repository/project tree with async loading via React 19 `use()`
-- `SelectableText` — Text highlighting and annotation
+- `RepoContextMenu` — Permission management and deletion for selected resources

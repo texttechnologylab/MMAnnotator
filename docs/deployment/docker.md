@@ -1,30 +1,39 @@
 # Docker Deployment
 
-The app ships with a multi-stage Dockerfile that builds the frontend and serves it via nginx.
+The app ships with a multi-stage Dockerfile that builds the frontend and serves
+it with nginx.
 
-## Build & Run
+## Build & run
 
 ```bash
 docker build -t mm-annotator .
-docker run -p 80:80 mm-annotator
+docker run -p 80:80 \
+  -e BACKEND_URL=wss://your-host/uima \
+  -e UCE_URL=https://your-uce-host \
+  mm-annotator
 ```
 
-The app will be available at `http://localhost`.
+The app is then available at `http://localhost`.
 
-## How It Works
+## How it works
 
-1. **Build stage** — Uses `node:22-alpine` to `npm install` and `npm run build`
-2. **Serve stage** — Copies the `dist/` output into `nginx:alpine` with a custom `nginx.conf`
+1. **Build stage** — `node:22-alpine` runs `npm install` and `npm run build`.
+2. **Serve stage** — the `dist/` output is copied into `nginx:alpine` with a
+   custom `nginx.conf`.
 
-## Custom nginx Configuration
+## SPA routing
 
-The `nginx.conf` is copied into the container to handle SPA routing (all paths fall back to `index.html`).
+`nginx.conf` falls back to `index.html` so client-side routes resolve correctly.
 
-## Environment Variables at Runtime
+## Runtime configuration
 
-The `docker-entrypoint.sh` script runs at container startup and can inject environment variables (e.g., backend URL) into the built assets before nginx starts serving.
+`docker-entrypoint.sh` runs at container start and writes the environment
+variables into a `config.js` file (defining `window._env_`) served next to the
+app. This lets one image target different backends without rebuilding. See
+[Configuration](../getting-started/configuration.md) for the available
+variables.
 
-## Docker Compose Example
+## Docker Compose
 
 ```yaml
 services:
@@ -33,5 +42,6 @@ services:
     ports:
       - "80:80"
     environment:
-      - BACKEND_URL=https://your-backend.example.com
+      - BACKEND_URL=wss://your-host/uima
+      - UCE_URL=https://your-uce-host
 ```

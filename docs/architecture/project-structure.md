@@ -2,53 +2,55 @@
 
 ```
 src/
-├── pages/              # Route-level page components
-│   ├── LoginPage.tsx
-│   ├── ProjectsPage.tsx
-│   ├── AnnotatorPage.tsx
-│   ├── LandingPage.tsx
-│   ├── HelpPage.tsx
-│   ├── LegalNotice.tsx
-│   ├── admin/
-│   │   └── Upload.tsx
+├── pages/                      # Route-level page components (see App.tsx)
+│   ├── LoginPage.tsx           # Authority-Manager login
+│   ├── LandingPage.tsx         # Redirects based on session
+│   ├── ProjectsPage.tsx        # Project picker
+│   ├── HelpPage.tsx / LegalNotice.tsx
+│   ├── admin/Upload.tsx        # Admin: tree, documents, upload, permissions
 │   └── projects/
-│       ├── Overview.tsx
-│       └── demo/
-│           └── DemoImage.tsx
-├── components/         # Reusable UI components
-│   ├── NavBar.tsx
-│   ├── RagBot.tsx
-│   ├── RepoTree.tsx
-│   ├── inputs/         # Form input components
-│   ├── display/        # Display-only components
-│   ├── shadcn/         # shadcn/ui components
-│   ├── admin/          # Admin-specific components
-│   └── wrappers/       # HOCs and providers
-├── hooks/              # Custom React hooks for data fetching
-├── lib/                # Utilities, API clients, helpers
-│   ├── annotator/      # TextAnnotator API integration
-│   └── resources/      # Permission and repository utilities
-└── zustand/            # Global state stores
+│       ├── Overview.tsx        # Per-project document list + admin panel
+│       └── demo/DemoImage.tsx  # Annotation page (criteria form + images + RAG)
+├── components/
+│   ├── NavBar.tsx              # Top bar, project switcher, theme toggle
+│   ├── RagBot.tsx              # UCE RAG Bot chat panel
+│   ├── RepoTree.tsx            # Async repository tree (React 19 `use()`)
+│   ├── RepoContextMenu.tsx     # Permission management / delete
+│   ├── inputs/                 # react-hook-form field components
+│   ├── layout/                 # Annotation page layout + criteria sections
+│   ├── display/                # ImageList, LoadingStateDrawer
+│   ├── admin/                  # Upload/validate dialogs, table columns
+│   ├── shadcn/                 # shadcn/ui primitives + theme provider
+│   └── wrappers/               # WebSocketProvider, WithAuth
+├── hooks/                      # Data hooks (useCasSeg, useImages, useProjectStats, …)
+├── lib/
+│   ├── annotator/              # WebSocket/CAS client (AnnoLib), login, AnnoApi
+│   ├── resources/              # repository.ts, permissions.ts (REST clients)
+│   ├── criteriaForm.ts         # Criteria-form model + helpers
+│   └── helpers.ts              # CAS/form utilities, cookies
+└── zustand/                    # Global stores
 ```
 
-## Key Directories
+## Key directories
 
 ### `pages/`
 
-Each file corresponds to a route defined in `App.tsx`. Pages compose components and hooks together.
+Each file maps to a route declared in `App.tsx`. Pages compose hooks and
+components; protected pages are wrapped in `WithAuth`.
 
-### `components/`
+### `lib/annotator/`
 
-Reusable components shared across pages. Includes shadcn/ui primitives under `shadcn/ui/` and custom form inputs under `inputs/`.
+The non-React core. `AnnoLib.ts` (`useANNO`) exposes the full WebSocket command
+set (open/save CAS, views, tools, batched edits, RAG messages, export). `login.ts`
+handles authentication against the Authority Manager.
 
-### `hooks/`
+### `lib/resources/`
 
-Data-fetching hooks that encapsulate API calls and caching logic (e.g., `useProject`, `useImages`, `useCas`).
+REST clients for the Resource Manager (`repository.ts`: projects, repositories,
+documents) and Authority Manager (`permissions.ts`: users, groups, access
+control).
 
-### `lib/`
+### `hooks/` and `zustand/`
 
-Non-React utilities — API client functions, helper methods, and resource management.
-
-### `zustand/`
-
-Global state stores for user session, project selection, document state, and loading indicators.
+Hooks combine the stores with the API layer and return derived, view-ready data.
+See [State Management](state-management.md).
