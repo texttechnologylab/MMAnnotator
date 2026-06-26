@@ -1,6 +1,6 @@
 # API & WebSockets
 
-The frontend talks to the [TextAnnotator](https://github.com/texttechnologylab/TextAnnotator)
+The frontend talks to the [TextAnnotator](https://aclanthology.org/2020.lrec-1.112/)
 backend over two channels: REST for resources/authentication and a persistent
 WebSocket for live annotation.
 

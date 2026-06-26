@@ -1,6 +1,6 @@
 # MultiMedia Annotator (MM-Annotator)
 
-Web frontend for the [TextAnnotator](https://github.com/texttechnologylab/TextAnnotator)
+Web frontend for the [TextAnnotator](https://aclanthology.org/2020.lrec-1.112/)
 backend — a browser-based platform for collaborative, real-time annotation of
 text and multimedia (image) documents, with optional LLM-assisted annotation.
 Built with React 19, TypeScript, Vite and Tailwind CSS.
