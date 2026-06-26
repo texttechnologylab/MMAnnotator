@@ -80,3 +80,4 @@ GitHub Actions (MkDocs Material).
 
 - Username: `DemoAnnotator`
 - Password: `demo2025`
+  Note: the adming panel is not available in the demo since uploading can not be permitted securely.
