@@ -1,8 +1,6 @@
 import { type ReactNode, useEffect, useState } from "react"
 import { ComboboxInputMult } from "./inputs/ComboBoxInput"
 import { SelectInput } from "./inputs/SelectInput"
-import { InputLabel } from "./inputs/common"
-import { Button } from "./shadcn/ui/button"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -35,13 +33,19 @@ import {
   createProject,
   createRepository,
   deleteItem,
-  deleteRepository
+  deleteProject,
+  deleteRepository,
+  getResourceTargetId,
+  getResourceTargetKind,
+  type ResourceTargetUri
 } from "@/lib/resources/repository"
 import { TextInput } from "./inputs/CustomInput"
 import { toast } from "sonner"
 import { DataTable } from "./shadcn/ui/data-table"
 import { DataTableContent } from "./shadcn/ui/data-table-content"
 import { CheckBoxInput } from "./inputs/CheckBoxInput"
+import { LoadingButton, LoadingState } from "./shadcn/ui/loading-button"
+import { useLoadingAction } from "../hooks/useLoadingAction"
 
 const accessColumns = [
   {
@@ -54,16 +58,28 @@ const accessColumns = [
   }
 ]
 
-//TODO: Extract common code with RepoContextMenu and make more modular
 export const RepoContextMenuTree = ({
   asChild,
   targets,
   parent,
+  onNodeCreated,
+  onNodeDeleted,
+  onNodeRefreshRequested,
+  onTreeRefreshRequested,
   children
 }: {
   asChild?: boolean
-  targets?: () => string | undefined
-  parent?: string
+  targets?: () => ResourceTargetUri | undefined
+  parent?: ResourceTargetUri
+  onNodeCreated?: (node: {
+    id: ResourceTargetUri
+    name: string
+    type: "REPOSITORY" | "PROJECT"
+    parentId: ResourceTargetUri
+  }) => void
+  onNodeDeleted?: (nodeId: ResourceTargetUri) => void
+  onNodeRefreshRequested?: (nodeId: ResourceTargetUri) => Promise<void> | void
+  onTreeRefreshRequested?: () => void
   children?: ReactNode
 }) => {
   const { session, userUri } = useUser()
@@ -80,6 +96,20 @@ export const RepoContextMenuTree = ({
     recursive: boolean
   }
 
+  interface CreateRepositoryForm {
+    name: string
+    parent: string
+  }
+
+  interface CreateProjectForm {
+    session: string
+    name: string
+    description: string
+    parent: string
+    frontend: string
+    key: string
+  }
+
   const permissionForm = useForm<PermissionForm>({
     defaultValues: {
       user: [],
@@ -88,14 +118,14 @@ export const RepoContextMenuTree = ({
     }
   })
 
-  const createRepoForm = useForm({
+  const createRepoForm = useForm<CreateRepositoryForm>({
     defaultValues: {
       name: "",
       parent: targets ? targets() || "" : ""
     }
   })
 
-  const createProjectForm = useForm({
+  const createProjectForm = useForm<CreateProjectForm>({
     defaultValues: {
       session: "",
       name: "",
@@ -139,11 +169,31 @@ export const RepoContextMenuTree = ({
     let response = null
     if (targetsString.includes("document"))
       response = await deleteItem(session, targetsString, parent)
-    else response = await deleteRepository(session, targetsString, parent)
+    else if (targetsString.includes("repository"))
+      response = await deleteRepository(session, targetsString, parent)
+    else response = await deleteProject(session, targetsString, parent)
 
-    if (response.success) toast.success("Item deleted successfully")
-    else toast.error("Failed to delete item")
+    if (response.success) {
+      onNodeDeleted?.(targetsString)
+      onTreeRefreshRequested?.()
+      toast.success("Item deleted successfully")
+      return
+    }
+
+    toast.error("Failed to delete item")
+    throw new Error("Failed to delete item")
   }
+
+  const { run: runDelete, loading: deleteLoading } = useLoadingAction(onDelete)
+
+  const { run: runRefresh, loading: refreshLoading } = useLoadingAction(
+    async () => {
+      const nodeId = targets?.()
+      if (!nodeId) return
+      await onNodeRefreshRequested?.(nodeId)
+      onTreeRefreshRequested?.()
+    }
+  )
 
   const onPermissionSubmit = async (data: PermissionForm) => {
     if (!session) return
@@ -168,11 +218,24 @@ export const RepoContextMenuTree = ({
     toast.success("Permissions updated successfully")
   }
 
-  const onCreateRepoSubmit = async (data: any) => {
+  const onCreateRepoSubmit = async (data: CreateRepositoryForm) => {
     if (!session || !userUri) return
     if (!targets || !targets()) return
-    const response = await createRepository(session, data.name, targets()!)
+    const parentId = targets()
+    if (!parentId) return
+
+    const response = await createRepository(session, data.name, parentId)
     if (response.success && response.result.length > 0) {
+      const createdRepository = response.result[0]
+      if (createdRepository?.uri) {
+        onNodeCreated?.({
+          id: createdRepository.uri,
+          name: createdRepository.name || data.name,
+          type: "REPOSITORY",
+          parentId
+        })
+      }
+
       const accessResponse = await setAccessPermissions(
         session,
         response.result[0].uri,
@@ -182,48 +245,77 @@ export const RepoContextMenuTree = ({
       )
       if (accessResponse.success) toast.success("Repo created successfully")
       else toast.error("Failed to set permissions")
+
+      onTreeRefreshRequested?.()
     } else toast.error("Failed to create repo")
   }
 
-  const onCreateProjectSubmit = async (data: any) => {
+  const onCreateProjectSubmit = async (data: CreateProjectForm) => {
     if (!session) return
     if (!targets || !targets()) return
     const targetsString = targets()
-    if (!targetsString?.includes("project")) return
+    if (!targetsString) return
+    if (getResourceTargetKind(targetsString) !== "project") return
 
     const response = await createProject(
       session,
       data.name,
       data.description,
-      targetsString.slice(targetsString.lastIndexOf("/") + 1),
+      getResourceTargetId(targetsString),
       data.frontend,
       data.key
     )
-    if (response.success) toast.success("Project created successfully")
-    else toast.error("Failed to create project")
+    if (response.success) {
+      const createdProject = Array.isArray(response.result)
+        ? response.result[0]
+        : response.result
+
+      if (createdProject?.uri) {
+        onNodeCreated?.({
+          id: createdProject.uri,
+          name: createdProject.name || data.name,
+          type: "PROJECT",
+          parentId: targetsString
+        })
+      }
+      onTreeRefreshRequested?.()
+      toast.success("Project created successfully")
+    } else toast.error("Failed to create project")
   }
 
-  const isTargetRepo = targets && targets()?.includes("repository")
+  const isTargetRepoAndNotRoot = targets && targets()?.includes("repository")
 
   return (
     <Dialog>
       <ContextMenu>
         <ContextMenuTrigger asChild={asChild}>{children}</ContextMenuTrigger>
         <ContextMenuContent>
-          <DialogTrigger>
+          <ContextMenuItem
+            disabled={!targets?.() || refreshLoading === LoadingState.LOADING}
+            onClick={() => void runRefresh()}
+          >
+            Refresh
+          </ContextMenuItem>
+          <DialogTrigger asChild>
             <ContextMenuItem onClick={() => setSelectedTab("permissions")}>
               Update Permissions
             </ContextMenuItem>
+          </DialogTrigger>
+          <DialogTrigger asChild>
             <ContextMenuItem onClick={() => setSelectedTab("create")}>
-              {isTargetRepo ? "Create Repository" : "Create Project/Repository"}
+              {isTargetRepoAndNotRoot
+                ? "Create Repository"
+                : "Create Project/Repository"}
             </ContextMenuItem>
+          </DialogTrigger>
+          <DialogTrigger asChild>
             <ContextMenuItem onClick={() => setSelectedTab("delete")}>
               Delete
             </ContextMenuItem>
           </DialogTrigger>
         </ContextMenuContent>
       </ContextMenu>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[60vw]">
         <DialogHeader>
           <DialogTitle>Interaction</DialogTitle>
           <DialogDescription></DialogDescription>
@@ -231,7 +323,11 @@ export const RepoContextMenuTree = ({
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
           <TabsList className="flex">
             <TabsTrigger value="permissions">Permissions</TabsTrigger>
-            <TabsTrigger value="create">Create Repository/Project</TabsTrigger>
+            <TabsTrigger value="create">
+              {isTargetRepoAndNotRoot
+                ? "Create Repository"
+                : "Create Project/Repository"}
+            </TabsTrigger>
             <TabsTrigger value="delete">Delete</TabsTrigger>
           </TabsList>
           <TabsContent value="permissions">
@@ -271,7 +367,9 @@ export const RepoContextMenuTree = ({
                       />
                     </div>
                     <div className="flex items-center space-x-2 mt-10">
-                      <InputLabel label="Recursive" />
+                      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Recursive
+                      </label>
                       <CheckBoxInput
                         control={permissionForm.control}
                         name="recursive"
@@ -294,7 +392,16 @@ export const RepoContextMenuTree = ({
                   </DataTable>
                 </div>
                 <DialogFooter>
-                  <Button type="submit">Save changes</Button>
+                  <LoadingButton
+                    type="submit"
+                    loading={
+                      permissionForm.formState.isSubmitting
+                        ? LoadingState.LOADING
+                        : LoadingState.NEUTRAL
+                    }
+                  >
+                    Save changes
+                  </LoadingButton>
                 </DialogFooter>
               </form>
             </Form>
@@ -303,7 +410,7 @@ export const RepoContextMenuTree = ({
             <Tabs defaultValue={"repository"}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="repository">Repository</TabsTrigger>
-                <TabsTrigger disabled={isTargetRepo} value="project">
+                <TabsTrigger disabled={isTargetRepoAndNotRoot} value="project">
                   Project
                 </TabsTrigger>
               </TabsList>
@@ -322,7 +429,16 @@ export const RepoContextMenuTree = ({
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button type="submit">Create Repository</Button>
+                      <LoadingButton
+                        type="submit"
+                        loading={
+                          createRepoForm.formState.isSubmitting
+                            ? LoadingState.LOADING
+                            : LoadingState.NEUTRAL
+                        }
+                      >
+                        Create Repository
+                      </LoadingButton>
                     </DialogFooter>
                   </form>
                 </Form>
@@ -362,7 +478,16 @@ export const RepoContextMenuTree = ({
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button type="submit">Create Project</Button>
+                      <LoadingButton
+                        type="submit"
+                        loading={
+                          createProjectForm.formState.isSubmitting
+                            ? LoadingState.LOADING
+                            : LoadingState.NEUTRAL
+                        }
+                      >
+                        Create Project
+                      </LoadingButton>
                     </DialogFooter>
                   </form>
                 </Form>
@@ -377,9 +502,13 @@ export const RepoContextMenuTree = ({
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={() => onDelete()} type="button">
+                <LoadingButton
+                  onClick={() => void runDelete()}
+                  type="button"
+                  loading={deleteLoading}
+                >
                   Delete items
-                </Button>
+                </LoadingButton>
               </DialogFooter>
             </form>
           </TabsContent>

@@ -1,3 +1,4 @@
+import { RESOURCE_MANAGER_URL } from "../constants"
 import type { ProjectStatus } from "@/zustand/useProject"
 
 export type Response<T> = {
@@ -19,7 +20,7 @@ export interface RepositoryData {
   type: string
   leaf: boolean
   iconCls: string
-  uri: string
+  uri: ResourceTargetUri
   qtip: string
 }
 
@@ -35,7 +36,7 @@ export interface DocumentData {
   description: string
   permission: number
   leaf: boolean
-  uri: string
+  uri: ResourceTargetUri
   storagetype: string
   filedownload: string
   size: number
@@ -43,6 +44,29 @@ export interface DocumentData {
   modified: string
   mimetype: string
   id: string
+}
+
+export type ResourceTargetKind = "project" | "repository" | "document"
+export type ResourceTargetUri =
+  `${string}/resource/${ResourceTargetKind}/${string}`
+
+export const isResourceTargetUri = (
+  value: string
+): value is ResourceTargetUri =>
+  /\/resource\/(project|repository|document)\//.test(value)
+
+export const getResourceTargetKind = (
+  uri: ResourceTargetUri
+): ResourceTargetKind => {
+  const match = uri.match(/\/resource\/(project|repository|document)\//)
+  if (!match) throw new Error("Invalid ResourceTargetUri")
+  return match[1] as ResourceTargetKind
+}
+
+export const getResourceTargetId = (uri: ResourceTargetUri): string => {
+  const match = uri.match(/\/resource\/(project|repository|document)\/(.+)/)
+  if (!match) throw new Error("Invalid ResourceTargetUri")
+  return match[2]
 }
 
 export interface ProjectChildBase {
@@ -69,7 +93,7 @@ export interface ProjectRepository extends ProjectChildBase {
   children: (ProjectRepository | ProjectDocument)[]
   modified: string
   id: number
-  uri: string
+  uri: ResourceTargetUri
   key: string
   owner: {
     label: string
@@ -84,7 +108,7 @@ export interface ProjectDocument extends ProjectChildBase {
   mime: string
   collection: string
   type: "DOCUMENT"
-  uri: string
+  uri: ResourceTargetUri
   download: string
   size: number
   port: number
@@ -112,7 +136,7 @@ export interface ResourceProject {
   author: string[]
   query_strategie: string[]
   permission: number
-  uri: string
+  uri: ResourceTargetUri
   depth: number
   //meta: {}
   elements: number
@@ -124,12 +148,18 @@ export interface ResourceProject {
   status: ProjectStatus
 }
 
+export const targetsToTargetString = (
+  targets: ResourceTargetUri[] | ResourceTargetUri
+): string => {
+  return JSON.stringify(targets)
+}
+
 export const getRepositories = async (
   session: string,
   node: string
 ): Promise<Response<RepositoryData>> => {
   const response = await fetch(
-    `https://resources.hucompute.org/getrepositories?session=${session}&node=${node}`
+    `${RESOURCE_MANAGER_URL}/getrepositories?session=${session}&node=${node}`
   )
   return response.json()
 }
@@ -139,7 +169,7 @@ export const getRepository = async (
   uri: string
 ): Promise<ResponseProj<ProjectRepository>> => {
   const response = await fetch(
-    `https://resources.hucompute.org/repository/${uri}?session=${session}`
+    `${RESOURCE_MANAGER_URL}/repository/${uri}?session=${session}`
   )
   return response.json()
 }
@@ -154,37 +184,54 @@ export const getDocuments = async (
   urlSearchParams.append("node", node)
   if (limit) urlSearchParams.append("limit", limit.toString())
   const response = await fetch(
-    `https://resources.hucompute.org/getdocuments?${urlSearchParams}`
+    `${RESOURCE_MANAGER_URL}/getdocuments?${urlSearchParams}`
   )
   return response.json()
 }
 
 export const getProjects = async (
-  session: string
+  session: string,
+  depth: number = 1
 ): Promise<ResponseProj<ResourceProject[]>> => {
   const response = await fetch(
-    `https://resources.hucompute.org/projects?session=${session}`
+    `${RESOURCE_MANAGER_URL}/projects?session=${session}&depth=${depth}`
   )
   return response.json()
 }
 
 export const getProject = async (
   session: string,
-  projectId: string
+  projectId: string,
+  depth: number = 1
 ): Promise<ResponseProj<ResourceProject>> => {
   const response = await fetch(
-    `https://resources.hucompute.org/project/${projectId}?session=${session}`
+    `${RESOURCE_MANAGER_URL}/project/${projectId}?session=${session}&depth=${depth}`
+  )
+  return response.json()
+}
+
+export const deleteProject = async (
+  session: string,
+  target: ResourceTargetUri,
+  parent: ResourceTargetUri
+) => {
+  const id = getResourceTargetId(target)
+  const response = await fetch(
+    `${RESOURCE_MANAGER_URL}/project/${id}?session=${session}&target=${target}&parent=${parent}`,
+    {
+      method: "DELETE"
+    }
   )
   return response.json()
 }
 
 export const deleteItem = async (
   session: string,
-  target: string,
-  parent: string
+  target: ResourceTargetUri | ResourceTargetUri[],
+  parent: ResourceTargetUri
 ) => {
   const response = await fetch(
-    `https://resources.hucompute.org/delete?session=${session}&target=${target}&parent=${parent}`,
+    `${RESOURCE_MANAGER_URL}/delete?session=${session}&target=${targetsToTargetString(target)}&parent=${parent}`,
     {
       method: "POST"
     }
@@ -194,18 +241,18 @@ export const deleteItem = async (
 
 export const deleteRepository = async (
   session: string,
-  target: string,
-  parent: string
+  target: ResourceTargetUri,
+  parent: ResourceTargetUri
 ) => {
   const response = await fetch(
-    `https://resources.hucompute.org/deleterepository?session=${session}&target=${target}&parent=${parent}`,
+    `${RESOURCE_MANAGER_URL}/repository?session=${session}&target=${target}&parent=${parent}`,
     {
-      method: "POST"
+      method: "DELETE"
     }
   )
   return response.json()
 }
-// https://resources.hucompute.org/project?session=SESSION&name=scoring_test&description=scoring_test&parent=29620&frontend=scoring&key=core_scoring_test
+// ${RESOURCE_MANAGER_URL}/project?session=SESSION&name=scoring_test&description=scoring_test&parent=29620&frontend=scoring&key=core_scoring_test
 export const createProject = async (
   session: string,
   name: string,
@@ -215,7 +262,7 @@ export const createProject = async (
   key: string
 ) => {
   const response = await fetch(
-    `https://resources.hucompute.org/project?session=${session}&name=${name}&description=${description}&parent=${parent}&frontend=${frontend}&key=${key}`,
+    `${RESOURCE_MANAGER_URL}/project?session=${session}&name=${name}&description=${description}&parent=${parent}&frontend=${frontend}&key=${key}`,
     {
       method: "POST"
     }
@@ -226,10 +273,10 @@ export const createProject = async (
 export const createRepository = async (
   session: string,
   name: string,
-  parent: string
+  parent: ResourceTargetUri
 ) => {
   const response = await fetch(
-    `https://resources.hucompute.org/createrepository?session=${session}&name=${name}&parent=${parent}`,
+    `${RESOURCE_MANAGER_URL}/repository?session=${session}&name=${name}&parent=${parent}`,
     {
       method: "POST"
     }

@@ -1,7 +1,6 @@
 "use client"
 import { NumberInput } from "@/components/inputs/CustomInput"
 import { ComboboxInput } from "@/components/inputs/ComboBoxInput"
-import { Button } from "@/components/shadcn/ui/button"
 import { DataTable } from "@/components/shadcn/ui/data-table"
 import { DataTableContent } from "@/components/shadcn/ui/data-table-content"
 import { DataTablePagination } from "@/components/shadcn/ui/data-table-pagination"
@@ -16,7 +15,11 @@ import { RepoContextMenu } from "@/components/RepoContextMenu"
 import { RepoTree } from "@/components/RepoTree"
 import WithAuth from "@/components/wrappers/WithAuth"
 import type { TreeDataItem } from "@/components/shadcn/ui/tree"
-import { type DocumentData, getDocuments } from "@/lib/resources/repository"
+import {
+  type DocumentData,
+  getDocuments,
+  type ResourceTargetUri
+} from "@/lib/resources/repository"
 import {
   getAccessPermissionsForTargets,
   getListUsersCombo,
@@ -31,20 +34,26 @@ import { useForm } from "react-hook-form"
 import { documentColumns } from "@/components/admin/columns"
 import { ValidateFilesDialog } from "@/components/admin/ValidateFilesDialog"
 import { UploadFilesDialog } from "@/components/admin/UploadFilesDialog"
+import { useLocalStorage } from "usehooks-ts"
+import {
+  LoadingButton,
+  LoadingState
+} from "@/components/shadcn/ui/loading-button"
 
 export const UploadPage = () => {
   const { session } = useUser()
 
-  const [project, setProject] = useState<string>("30438")
+  const [project, setProject] = useLocalStorage("upload-project", "0")
   const [selectedItem, setSelectedItem] = useState<TreeDataItem>()
   const [documentTableData, setDocumentTableData] = useState<DocumentData[]>([])
   const [filterUrls, setFilterUrls] = useState<string[]>([])
-  const [targets, setTargets] = useState<string[]>([])
+  const [targets, setTargets] = useState<ResourceTargetUri[]>([])
   const [userCombo, setUserCombo] = useState<UserCombo[]>([])
+  const [repoTreeLoading, setRepoTreeLoading] = useState(false)
 
-  const tableRef = useRef<TableType<DocumentData>>()
+  const tableRef = useRef<TableType<DocumentData> | undefined>(undefined)
 
-  const treeForm = useForm({ defaultValues: { project: "30438" } })
+  const treeForm = useForm({ defaultValues: { project: project } })
   const documentFilters = useForm({ defaultValues: { user: "" } })
 
   const repositoryId = selectedItem?.id
@@ -61,7 +70,7 @@ export const UploadPage = () => {
     setTargets([])
   }, [session])
 
-  const onTreeSubmit = (data: any) => setProject(data.project)
+  const onTreeSubmit = (data: { project: string }) => setProject(data.project)
 
   const treeItemSelect = (item: TreeDataItem | undefined) => {
     if (!item?.id || !session) return
@@ -73,16 +82,17 @@ export const UploadPage = () => {
     }
   }
 
-  const onFilterSubmit = async (filterData: any) => {
+  const onFilterSubmit = async (filterData: { user: string }) => {
     const documents = documentTableData.map((entry) => entry.uri)
-    getAccessPermissionsForTargets(session!, documents, "USER").then(
-      (access) => {
-        setFilterUrls(
-          access
-            .filter((entry) => entry.authority.uri === filterData.user)
-            .map((entry) => entry.object)
-        )
-      }
+    const access = await getAccessPermissionsForTargets(
+      session!,
+      documents,
+      "USER"
+    )
+    setFilterUrls(
+      access
+        .filter((entry) => entry.authority.uri === filterData.user)
+        .map((entry) => entry.object)
     )
   }
 
@@ -104,14 +114,26 @@ export const UploadPage = () => {
                   name="project"
                   label={"Current Root Project"}
                 />
-                <Button type="submit" variant="outline">
+                <LoadingButton
+                  type="submit"
+                  variant="outline"
+                  loading={
+                    repoTreeLoading
+                      ? LoadingState.LOADING
+                      : LoadingState.NEUTRAL
+                  }
+                >
                   <ReloadIcon />
-                </Button>
+                </LoadingButton>
               </CardContent>
             </form>
           </Form>
           <div className="flex-1 overflow-hidden">
-            <RepoTree rootProject={project} onSelectChange={treeItemSelect} />
+            <RepoTree
+              rootProject={project}
+              onSelectChange={treeItemSelect}
+              onLoadingChange={setRepoTreeLoading}
+            />
           </div>
         </ResizablePanel>
 
@@ -144,9 +166,17 @@ export const UploadPage = () => {
                     }}
                     className="w-[95%]"
                   />
-                  <Button variant="outline" type="submit">
+                  <LoadingButton
+                    variant="outline"
+                    type="submit"
+                    loading={
+                      documentFilters.formState.isSubmitting
+                        ? LoadingState.LOADING
+                        : LoadingState.NEUTRAL
+                    }
+                  >
                     <ReloadIcon />
-                  </Button>
+                  </LoadingButton>
                 </form>
               </Form>
 
@@ -160,7 +190,9 @@ export const UploadPage = () => {
                     onRowSelectionChanged={() => {
                       const newTargets = tableRef.current
                         ?.getFilteredSelectedRowModel()
-                        .rows.map((row) => row.getValue("uri") as string)
+                        .rows.map(
+                          (row) => row.getValue("uri") as ResourceTargetUri
+                        )
                       if (!newTargets || sameElements(newTargets, targets))
                         return
                       setTargets(newTargets)

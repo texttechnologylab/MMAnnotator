@@ -57,7 +57,7 @@ import WithAuth from "@/components/wrappers/WithAuth"
 import { getAccessPermissionsForTargets } from "@/lib/resources/permissions"
 import { useUser } from "@/zustand/useUser"
 
-export default function Overview() {
+export default function DefaultOverview() {
   return (
     <WithAuth>
       <OverviewContainer />

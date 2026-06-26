@@ -71,7 +71,12 @@ export function ComboboxInput<T extends FieldValues>({
                 </Button>
               </PopoverTrigger>
             </div>
-            <PopoverContent className="w-full p-0">
+            <PopoverContent
+              align="start"
+              side="bottom"
+              sideOffset={4}
+              className="w-[var(--radix-popover-trigger-width)] p-0"
+            >
               <Command>
                 <CommandInput placeholder="Select..." />
                 <CommandList className="max-h-[20vh] overflow-scroll">
@@ -157,7 +162,12 @@ export function ComboboxInputMult<T extends FieldValues>({
                 </Button>
               </PopoverTrigger>
             </div>
-            <PopoverContent className="w-full p-0">
+            <PopoverContent
+              align="start"
+              side="bottom"
+              sideOffset={4}
+              className="w-[var(--radix-popover-trigger-width)] p-0"
+            >
               <Command>
                 <CommandInput placeholder="Select..." />
                 <CommandList className="max-h-[20vh] overflow-scroll">

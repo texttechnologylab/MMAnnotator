@@ -11,9 +11,10 @@ import { projectStatusColor } from "../lib/helpers"
 import { useUser } from "../zustand/useUser"
 import { useProjectId } from "@/hooks/useProjectId"
 import { useProjectStats } from "@/hooks/useProjectStats"
-import { Edit, Menu, X } from "lucide-react"
+import { Edit, Menu, Moon, Sun, X } from "lucide-react"
 import { Button } from "@/components/shadcn/ui/button"
 import { useState } from "react"
+import { useTheme } from "@/components/shadcn/theme-provider"
 
 export default function NavBar() {
   const { userName } = useUser()
@@ -22,6 +23,7 @@ export default function NavBar() {
 
   const { currentProject, projectList, setCurrentProject } = useProjectStore()
   const [menuOpen, setMenuOpen] = useState(false)
+  const { theme, setTheme } = useTheme()
 
   return (
     <nav className="flex items-center justify-between bg-muted/50 border-b px-4 py-2 mb-3">
@@ -120,6 +122,39 @@ export default function NavBar() {
                 User: <strong>{userName || "?"}</strong>
                 <Edit className="h-4 w-4" />
               </a>
+            </div>
+            <div className="p-4 border-t mt-auto">
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium">Theme</span>
+                <div className="flex gap-2">
+                  <Button
+                    variant={theme === "light" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setTheme("light")}
+                    className="flex-1"
+                  >
+                    <Sun className="h-4 w-4 mr-2" />
+                    Light
+                  </Button>
+                  <Button
+                    variant={theme === "dark" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setTheme("dark")}
+                    className="flex-1"
+                  >
+                    <Moon className="h-4 w-4 mr-2" />
+                    Dark
+                  </Button>
+                  <Button
+                    variant={theme === "system" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setTheme("system")}
+                    className="flex-1"
+                  >
+                    System
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </>
