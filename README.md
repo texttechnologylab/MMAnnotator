@@ -1,24 +1,22 @@
 # MultiMedia Annotator (MM-Annotator)
 
 Web frontend for the [TextAnnotator](https://aclanthology.org/2020.lrec-1.112/)
-backend — a browser-based platform for collaborative, real-time annotation of
+backend - a browser-based platform for collaborative, real-time annotation of
 text and multimedia (image) documents, with optional LLM-assisted annotation.
 Built with React 19, TypeScript, Vite and Tailwind CSS.
 
 ## Features
 
-- **Project-based workflow** — browse projects, track per-document annotation
+- **Project-based workflow**: browse projects, track per-document annotation
   status and overall progress, resume where you left off.
-- **Real-time collaboration** — persistent WebSocket connection to the
-  TextAnnotator UIMA CAS service; edits are batched and synchronised live.
-- **Criteria-based rating forms** — configurable sections of button, select and
+- **Criteria-based rating forms**: configurable sections of button, select and
   numeric fields that map to UIMA `Category` feature structures.
-- **Multimedia annotation** — text, question/answer scenarios and lazy-loaded,
+- **Multimedia annotation**: text, question/answer scenarios and lazy-loaded,
   virtualised image galleries shown side by side.
-- **LLM-assisted annotation (UCE RAG Bot)** — streaming chat with text and
+- **LLM-assisted annotation (UCE RAG Bot)**: streaming chat with text and
   vision models that can read the document and auto-fill rating fields via
   structured _tool actions_.
-- **Admin tooling** — document upload (XMI / gzipped XMI), CAS validation,
+- **Admin tooling**: document upload (XMI / gzipped XMI), CAS validation,
   fine-grained permission management (per user/group, recursive, even
   distribution among annotators), CSV export and progress dashboards.
 - **Role-based access** and dark mode.
@@ -71,13 +69,14 @@ src/
 
 ## Documentation
 
-Full documentation lives in [docs/](docs/) and is built with MkDocs Material:
-
-```bash
-pip install mkdocs-material && mkdocs serve
-```
+Full documentation is published at
+**[texttechnologylab.github.io/MMAnnotator](https://texttechnologylab.github.io/MMAnnotator/)**.
+The sources live in [docs/](docs/) and are built and deployed from `master` via
+GitHub Actions (MkDocs Material).
 
 ## Demo
 
-[eval.textannotator.texttechnologylab.org](https://www.eval.textannotator.texttechnologylab.org/)
-— user `DemoAnnotator`, password `demo2025`.
+[https://www.eval.textannotator.texttechnologylab.org/](https://www.eval.textannotator.texttechnologylab.org/)
+
+- Username: `DemoAnnotator`
+- Password: `demo2025`
