@@ -55,6 +55,10 @@ docker run -p 80:80 -e BACKEND_URL=wss://host/uima -e UCE_URL=https://uce mm-ann
 ```
 
 A multi-stage build compiles the app and serves it via nginx with SPA routing.
+For a reproducible deployment, a prebuilt image
+(`docker.texttechnologylab.org/textannotator-rag-demo:latest`) and a Compose
+capsule are described in
+[docs/deployment/docker.md](docs/deployment/docker.md#reproducible-capsule).
 
 ## Project Structure
 

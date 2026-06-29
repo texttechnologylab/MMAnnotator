@@ -35,6 +35,8 @@ variables.
 
 ## Docker Compose
 
+Build from source:
+
 ```yaml
 services:
   frontend:
@@ -45,3 +47,27 @@ services:
       - BACKEND_URL=wss://your-host/uima
       - UCE_URL=https://your-uce-host
 ```
+
+## Reproducible capsule
+
+For a reproducible deployment, use the
+prebuilt image published to the TTLab registry instead of building locally. The
+frontend is one service of the wider TextAnnotator + RAG stack:
+
+```yaml
+ta-frontend:
+  image: docker.texttechnologylab.org/textannotator-rag-demo:latest
+  ports:
+    - ${PORT_FRONTEND}:80
+  environment:
+    BACKEND_URL: ${WS_URL}
+    UCE_URL: ${UCE_URL}
+```
+
+`PORT_FRONTEND`, `WS_URL` and `UCE_URL` are supplied via the stack's `.env` file;
+`WS_URL` points at the TextAnnotator WebSocket (`…/uima`) and `UCE_URL` at the
+UCE host serving the RAG Bot.
+
+The UCE host is provided by the
+[Unified Corpus Explorer (UCE)](https://github.com/texttechnologylab/UCE), which
+serves the RAG Bot backend; see its repository for deployment instructions.

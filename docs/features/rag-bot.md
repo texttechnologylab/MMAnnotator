@@ -2,7 +2,8 @@
 
 The **UCE RAG Bot** (`components/RagBot.tsx`) is an optional LLM assistant
 available on the annotation page. It opens as a resizable overlay so the
-annotator can chat while keeping the document in view.
+annotator can chat while keeping the document in view. The backend is provided by
+the [Unified Corpus Explorer (UCE)](https://github.com/texttechnologylab/UCE).
 
 ## Models
 
